@@ -3,3 +3,5 @@
 dist
 node_modules
 *.d.ts
+
+/src/generated/prisma
