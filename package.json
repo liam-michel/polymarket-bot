@@ -1,0 +1,26 @@
+{
+  "name": "polymarket-bot",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.0",
+    "eslint": "^8.50.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "prettier": "^2.8.0",
+    "eslint-config-prettier": "^8.8.0",
+    "@types/node": "^20.5.0",
+    "eslint-plugin-simple-import-sort": "^9.0.0",
+    "eslint-plugin-unused-imports": "^3.1.0"
+  }
+}
