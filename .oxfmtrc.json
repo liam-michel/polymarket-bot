@@ -1,0 +1,34 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 80,
+  "tabWidth": 2,
+  "sortPackageJson": false,
+  "sortImports": {
+    "groups": [
+      ["value-builtin", "value-external", "type-builtin", "type-external"],
+      [
+        "value-internal",
+        "type-internal",
+        "value-parent",
+        "value-sibling",
+        "value-index",
+        "type-parent",
+        "type-sibling",
+        "type-index"
+      ],
+      "unknown"
+    ]
+  },
+  "ignorePatterns": [
+    "node_modules/**",
+    "dist/**",
+    ".env",
+    "*.d.ts",
+    "prisma/src/__generated__/**",
+    "prisma/generated/**",
+    "src/generated/prisma/**"
+  ]
+}

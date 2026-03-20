@@ -11,7 +11,7 @@ bun install
 Install the dev dependencies listed in `package.json` (if you prefer explicit install):
 
 ```bash
-bun add -d typescript eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin prettier eslint-config-prettier @types/node
+bun add -d typescript oxlint oxfmt @types/node
 ```
 
 Run the app:
@@ -33,4 +33,5 @@ Lint and format:
 ```bash
 bun run lint
 bun run format
+bun run format:check
 ```
