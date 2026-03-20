@@ -1,0 +1,35 @@
+import { App, initializeAppFromEnvironment } from '../app.js';
+import { wallets } from './commands/wallets.js';
+import { createCommand } from 'commander';
+
+function getBeforeExitHandler({ logger }: App): NodeJS.BeforeExitListener {
+  return async () => {
+    logger.warn(
+      'Uncaught error or unhandled promise rejection occurred, executing cleanup tasks',
+    );
+    //TODO add cleanup here (will be passed with logger)
+    logger.warn('Cleanup tasks completed, exiting now');
+    process.exit(1);
+  };
+}
+
+async function main() {
+  const app = await initializeAppFromEnvironment();
+  const p = createCommand();
+  const beforeExitHandler = getBeforeExitHandler(app);
+  process.on('uncaughtException', beforeExitHandler);
+  process.on('unhandledRejection', beforeExitHandler);
+
+  //register commands
+  p.addCommand(wallets(app));
+  await p
+    .parseAsync(process.argv)
+    .then(() => {
+      process.exit(0);
+    })
+    .catch((err) => {
+      app.logger.error(`Error executing command: ${err.message}`);
+      process.exit(1);
+    });
+}
+await main();
