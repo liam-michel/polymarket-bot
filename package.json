@@ -4,9 +4,11 @@
   "description": "",
   "license": "ISC",
   "author": "",
-  "type": "commonjs",
-  "main": "index.js",
+  "type": "module",
+  "main": "./src/index.ts",
+  "packageManager": "bun@1.3.0",
   "scripts": {
+    "dev": "bun run ./src/index.ts",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
