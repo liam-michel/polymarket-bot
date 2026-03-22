@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "builtin": true,
+    "es2022": true,
+    "node": true
+  },
+  "ignorePatterns": [
+    "node_modules/**",
+    "dist/**",
+    ".env",
+    "*.d.ts",
+    "prisma/src/__generated__/**",
+    "prisma/generated/**",
+    "src/generated/prisma/**"
+  ],
+  "rules": {
+    "no-unused-vars": [
+      "error",
+      {
+        "args": "after-used",
+        "argsIgnorePattern": "^_",
+        "ignoreRestSiblings": true,
+        "varsIgnorePattern": "^_"
+      }
+    ]
+  }
+}
