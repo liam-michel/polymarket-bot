@@ -1,8 +1,8 @@
-import { App, initializeAppFromEnvironment } from '../app.js';
-import { wallets } from './commands/wallets.js';
 import { createCommand } from 'commander';
 
-function getBeforeExitHandler({ logger }: App) {
+import { AppConfig, initializeAppFromEnvironment } from '../app.js';
+import { markets } from './commands/market.js';
+function getBeforeExitHandler({ logger }: AppConfig) {
   return async () => {
     logger.warn(
       'Uncaught error or unhandled promise rejection occurred, executing cleanup tasks',
@@ -21,7 +21,7 @@ async function main() {
   process.on('unhandledRejection', beforeExitHandler);
 
   //register commands
-  p.addCommand(wallets(app));
+  p.addCommand(markets(app));
   await p
     .parseAsync(process.argv)
     .then(() => {
