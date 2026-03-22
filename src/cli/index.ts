@@ -1,8 +1,8 @@
-import { App, initializeAppFromEnvironment } from '../app.js';
+import { AppConfig, initializeAppFromEnvironment } from '../app.js';
 import { wallets } from './commands/wallets.js';
 import { createCommand } from 'commander';
 
-function getBeforeExitHandler({ logger }: App) {
+function getBeforeExitHandler({ logger }: AppConfig) {
   return async () => {
     logger.warn(
       'Uncaught error or unhandled promise rejection occurred, executing cleanup tasks',

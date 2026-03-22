@@ -3,16 +3,10 @@
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
-generator client {
-  provider = "prisma-client"
-  output   = "./src/__generated__/"
-  fileName = "database.ts"
-  camelCase = false
-}
-
-generator kysely  {
+generator client  {
   provider = "prisma-kysely"
-  output  = "./generated/kysely"
+  output  = "../src/__generated__/"
+  fileName = "database.ts"
 }
 datasource db {
   provider = "postgresql"
