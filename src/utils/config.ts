@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const Config = z.object({
-  postgresURL: z.string(),
+  DATABASE_URL: z.string(),
 });
 
 export function readConfig() {

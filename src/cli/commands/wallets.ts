@@ -15,13 +15,13 @@ const listWallets = (app: App) =>
         'Limit the number of wallets returned',
       )
         .argParser((value) => {
-          const parsed = walletLimitSchema.safeParse(value);
+          const parsed = walletLimitSchema.safeParse({ limit: value });
           if (!parsed.success) {
             throw new Error(
               `Invalid limit: "${value}". Must be a positive integer between 1 and 100.`,
             );
           }
-          return parsed.data;
+          return parsed.data.limit;
         })
         .default(10),
     )

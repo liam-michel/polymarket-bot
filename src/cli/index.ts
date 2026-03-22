@@ -2,7 +2,7 @@ import { App, initializeAppFromEnvironment } from '../app.js';
 import { wallets } from './commands/wallets.js';
 import { createCommand } from 'commander';
 
-function getBeforeExitHandler({ logger }: App): NodeJS.BeforeExitListener {
+function getBeforeExitHandler({ logger }: App) {
   return async () => {
     logger.warn(
       'Uncaught error or unhandled promise rejection occurred, executing cleanup tasks',
@@ -28,7 +28,8 @@ async function main() {
       process.exit(0);
     })
     .catch((err) => {
-      app.logger.error(`Error executing command: ${err.message}`);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      app.logger.error(`Error executing command: ${errorMessage}`);
       process.exit(1);
     });
 }

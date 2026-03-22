@@ -5,19 +5,19 @@ import { createLogger } from './utils/logger.js';
 import * as _ from 'radashi';
 
 export type AppConfig = {
-  postgresURL: string;
+  DATABASE_URL: string;
 };
 export type App = ReturnType<typeof initializeAppWithConfig>;
 
-export const initializeAppWithConfig = ({ postgresURL }: AppConfig) => {
+export const initializeAppWithConfig = ({ DATABASE_URL }: AppConfig) => {
   const logger = createLogger();
   logger.info('Config loaded successfully');
-  const postgresStorage = createDB(postgresURL);
+  const postgresStorage = createDB(DATABASE_URL);
   logger.info('Database connection established successfully');
 
   return {
     logger,
-    config: { postgresURL },
+    config: { DATABASE_URL },
     postgresStorage,
   };
 };
