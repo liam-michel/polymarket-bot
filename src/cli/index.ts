@@ -1,5 +1,6 @@
-import { AppConfig, initializeAppFromEnvironment } from '../app.js';
 import { createCommand } from 'commander';
+
+import { AppConfig, initializeAppFromEnvironment } from '../app.js';
 import { markets } from './commands/market.js';
 function getBeforeExitHandler({ logger }: AppConfig) {
   return async () => {

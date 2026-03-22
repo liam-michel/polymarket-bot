@@ -20,7 +20,10 @@ function getMarketById(db: KyselyDB): MarketStorage['getMarketById'] {
       .where('condition_id', '=', id)
       .selectAll()
       .executeTakeFirst();
-    return Models['Market'].parse(result) || null;
+    if (result) {
+      return Models['Market'].parse(result);
+    }
+    return null;
   };
 }
 

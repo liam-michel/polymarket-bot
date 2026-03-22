@@ -1,9 +1,10 @@
-import pg from 'pg';
+import assert from 'assert';
 import { PostgresDialect, CamelCasePlugin } from 'kysely';
 import { Kysely } from 'kysely';
-import assert from 'assert';
-import { KyselyDB } from './types.js';
+import pg from 'pg';
+
 import { createMarketStorage, MarketStorage } from './market.js';
+import { KyselyDB } from './types.js';
 import * as generated from '~/__generated__/database.js';
 export type Storage = {
   market: MarketStorage;

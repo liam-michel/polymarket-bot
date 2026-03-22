@@ -1,6 +1,6 @@
-import { AppConfig } from '~/app.js';
-
 import { createCommand } from 'commander';
+
+import { AppConfig } from '~/app.js';
 
 const listMarkets = (app: AppConfig) =>
   createCommand('list-markets')

@@ -1,5 +1,6 @@
 import { Decimal } from 'decimal.js';
 import z from 'zod';
+
 import * as generated from '~/__generated__/database.js';
 
 const MarketStatus = z.enum(generated.MarketStatus);

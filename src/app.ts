@@ -1,9 +1,10 @@
 //file for creating all app dependencies and returning them for index.ts and others to use
 import type { Logger } from 'pino';
+import * as _ from 'radashi';
+
+import { createStorage, Storage } from './storage/index.js';
 import { Config, readConfig } from './utils/config.js';
 import { createLogger } from './utils/logger.js';
-import * as _ from 'radashi';
-import { createStorage, Storage } from './storage/index.js';
 
 export type AppConfig = {
   logger: Logger;
