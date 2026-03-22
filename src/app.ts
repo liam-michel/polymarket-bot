@@ -1,27 +1,24 @@
 //file for creating all app dependencies and returning them for index.ts and others to use
 import type { Logger } from 'pino';
 import { Config, readConfig } from './utils/config.js';
-import { createDB } from './utils/database.js';
 import { createLogger } from './utils/logger.js';
 import * as _ from 'radashi';
-import type { DB } from '../prisma/generated/kysely/types.js';
-import type { Kysely } from 'kysely';
+import { createStorage, Storage } from './storage/index.js';
+
 export type AppConfig = {
   logger: Logger;
-  storage: Kysely<DB>;
+  storage: Storage;
 };
 
-export const initializeAppWithConfig = ({
+export const initializeAppWithConfig = async ({
   DATABASE_URL,
-}: Config): AppConfig => {
+}: Config): Promise<AppConfig> => {
   const logger = createLogger();
   logger.info('Config loaded successfully');
-  const postgresStorage = createDB(DATABASE_URL);
-  logger.info('Database connection established successfully');
-
+  const storage = await createStorage(DATABASE_URL);
   return {
     logger,
-    storage: postgresStorage,
+    storage,
   };
 };
 

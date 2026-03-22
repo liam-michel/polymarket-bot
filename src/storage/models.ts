@@ -9,70 +9,76 @@ const SignalType = z.enum(generated.SignalType);
 const decimal = z.string().transform((val) => new Decimal(val));
 
 const Market = z.object({
-  conditionId: z.string(),
+  condition_id: z.string(),
   question: z.string(),
   category: z.string().nullable(),
-  outcomeA: z.string(),
-  outcomeB: z.string(),
+  outcome_a: z.string(),
+  outcome_b: z.string(),
   status: MarketStatus,
   outcome: z.number().int().nullable(),
-  closesAt: z.date(),
-  resolvedAt: z.date().nullable(),
-  volumeUsd: decimal,
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  closes_at: z.date(),
+  resolved_at: z.date().nullable(),
+  volume_usd: decimal,
+  created_at: z.date(),
+  updated_at: z.date(),
 });
 
 const Trade = z.object({
-  fillId: z.string(),
-  conditionId: z.string(),
+  fill_id: z.string(),
+  condition_id: z.string(),
   wallet: z.string(),
   side: TradeSide,
-  outcomeIndex: z.number().int().refine((val) => val === 0 || val === 1, {
-    message: 'outcomeIndex must be 0 or 1',
-  }),
+  outcome_index: z
+    .number()
+    .int()
+    .refine((val) => val === 0 || val === 1, {
+      message: 'outcome_index must be 0 or 1',
+    }),
   price: decimal,
   size: decimal,
-  usdValue: decimal,
-  filledAt: z.date(),
-  createdAt: z.date(),
+  usd_value: decimal,
+  filled_at: z.date(),
+  created_at: z.date(),
 });
 
 const Position = z.object({
   id: z.number().int(),
   wallet: z.string(),
-  conditionId: z.string(),
-  outcomeIndex: z.number().int().refine((val) => val === 0 || val === 1, {
-    message: 'outcomeIndex must be 0 or 1',
-  }),
+  condition_id: z.string(),
+  outcome_index: z
+    .number()
+    .int()
+    .refine((val) => val === 0 || val === 1, {
+      message: 'outcome_index must be 0 or 1',
+    }),
   size: decimal,
-  avgEntry: decimal,
-  currentPrice: decimal,
-  unrealisedPnl: decimal,
-  updatedAt: z.date(),
+  avg_entry: decimal,
+  current_price: decimal,
+  unrealised_pnl: decimal,
+  updated_at: z.date(),
 });
 
 const TraderStats = z.object({
   wallet: z.string(),
-  tradeCount: z.number().int(),
-  resolvedTrades: z.number().int(),
-  winCount: z.number().int(),
-  winRate: decimal,
-  realisedPnl: decimal,
+  trade_count: z.number().int(),
+  resolved_trades: z.number().int(),
+  win_count: z.number().int(),
+  win_rate: decimal,
+  realised_pnl: decimal,
   roi: decimal,
-  avgEdge: decimal,
+  avg_edge: decimal,
   score: decimal,
-  firstTradeAt: z.date().nullable(),
-  lastTradeAt: z.date().nullable(),
-  updatedAt: z.date(),
+  first_trade_at: z.date().nullable(),
+  last_trade_at: z.date().nullable(),
+  updated_at: z.date(),
 });
 
 const MarketPrice = z.object({
   id: z.string(),
-  conditionId: z.string(),
-  outcomeIndex: z.number().int(),
+  condition_id: z.string(),
+  outcome_index: z.number().int(),
   price: decimal,
-  capturedAt: z.date(),
+  captured_at: z.date(),
 });
 
 const Watchlist = z.object({
@@ -80,32 +86,35 @@ const Watchlist = z.object({
   reason: z.string(),
   score: decimal,
   active: z.boolean(),
-  addedAt: z.date(),
-  removedAt: z.date().nullable(),
+  added_at: z.date(),
+  removed_at: z.date().nullable(),
 });
 
 const Signal = z.object({
   id: z.string(),
   wallet: z.string(),
-  conditionId: z.string(),
-  signalType: SignalType,
+  condition_id: z.string(),
+  signal_type: SignalType,
   side: TradeSide,
-  outcomeIndex: z.number().int().refine((val) => val === 0 || val === 1, {
-    message: 'outcomeIndex must be 0 or 1',
-  }),
+  outcome_index: z
+    .number()
+    .int()
+    .refine((val) => val === 0 || val === 1, {
+      message: 'outcome_index must be 0 or 1',
+    }),
   price: decimal,
   confidence: decimal,
-  dryRun: z.boolean(),
+  dry_run: z.boolean(),
   executed: z.boolean(),
-  executedAt: z.date().nullable(),
+  executed_at: z.date().nullable(),
   notes: z.string().nullable(),
-  createdAt: z.date(),
+  created_at: z.date(),
 });
 
 const IngestionCursor = z.object({
   key: z.string(),
   cursor: z.string(),
-  updatedAt: z.date(),
+  updated_at: z.date(),
 });
 
 export type Market = z.infer<typeof Market>;
@@ -117,7 +126,7 @@ export type Watchlist = z.infer<typeof Watchlist>;
 export type Signal = z.infer<typeof Signal>;
 export type IngestionCursor = z.infer<typeof IngestionCursor>;
 
-export {
+export const Models = {
   Market,
   Trade,
   Position,
@@ -126,4 +135,10 @@ export {
   Watchlist,
   Signal,
   IngestionCursor,
+};
+
+export type Models = {
+  [K in keyof typeof Models]: (typeof Models)[K] extends z.ZodSchema
+    ? z.infer<(typeof Models)[K]>
+    : (typeof Models)[K];
 };
