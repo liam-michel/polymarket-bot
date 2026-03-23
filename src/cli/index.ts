@@ -21,12 +21,31 @@ async function main() {
   process.on('unhandledRejection', beforeExitHandler);
   // cleanup on graceful shutdown
   process.on('SIGINT', async () => {
-    await app.cleanup();
-    process.exit(0);
+    try {
+      await app.cleanup();
+      process.exit(0);
+    } catch (err) {
+      app.logger.error(
+        `Error during cleanup: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+      process.exit(1);
+    }
   });
+
   process.on('SIGTERM', async () => {
-    await app.cleanup();
-    process.exit(0);
+    try {
+      await app.cleanup();
+      process.exit(0);
+    } catch (err) {
+      app.logger.error(
+        `Error during cleanup: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+      process.exit(1);
+    }
   });
 
   //register commands
