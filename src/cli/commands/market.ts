@@ -1,6 +1,13 @@
-import { createCommand } from 'commander';
+import { createArgument, createCommand } from 'commander';
+import { z } from 'zod';
 
 import { App, instruction } from '~/app.js';
+
+const listMarketSchema = z.object({
+  count: z.number().int().positive().min(1),
+  offset: z.number().int().nonnegative(),
+  asc: z.boolean(),
+});
 
 const listMarkets = (app: App) =>
   createCommand('list-markets')
@@ -13,10 +20,40 @@ const listMarkets = (app: App) =>
         .once();
       app.logger.info({ result }, 'Markets listed successfully');
     });
+
+const listResolvedMarkets = (app: App) =>
+  createCommand('list-resolved-markets')
+    .description('List resolved markets from Gamma API')
+    .addArgument(
+      createArgument('[count]', 'Number of resolved markets to fetch')
+        .default(1)
+        .argParser(Number),
+    )
+    .addArgument(
+      createArgument('[offset]', 'Number of resolved markets to skip')
+        .default(0)
+        .argParser(Number),
+    )
+    .addArgument(
+      createArgument('[asc]', 'Sort markets in ascending order')
+        .default(false)
+        .argParser((value) => value === 'true'),
+    )
+    .action(async (count, offset, asc) => {
+      const parsedArgs = listMarketSchema.parse({ count, offset, asc });
+      const result = await app
+        .execute(({ gammaApiClient }) =>
+          instruction(() => gammaApiClient.scrapeResolvedMarkets(parsedArgs)),
+        )
+        .once();
+      app.logger.info({ result }, 'Resolved markets listed successfully');
+    });
+
 export const markets = (app: App) => {
   const parentCommand = createCommand('markets').description(
     'Commands related to markets',
   );
   parentCommand.addCommand(listMarkets(app));
+  parentCommand.addCommand(listResolvedMarkets(app));
   return parentCommand;
 };

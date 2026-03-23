@@ -1,12 +1,16 @@
 import pino from 'pino';
 
-export const createLogger = () => {
-  return pino({
-    level: 'info',
-    //use pretty print in development
-    transport:
-      process.env.NODE_ENV === 'development'
-        ? { target: 'pino-pretty' }
-        : undefined,
+export const createLogger = (logLevel: string) => {
+  const logger = pino({
+    level: logLevel,
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+        translateTime: 'SYS:standard',
+        ignore: 'pid,hostname',
+      },
+    },
   });
+  return logger;
 };

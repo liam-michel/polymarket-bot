@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const AppConfig = z.object({
   DATABASE_URL: z.string(),
+  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 });
 
 export type AppConfig = z.infer<typeof AppConfig>;
