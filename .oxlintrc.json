@@ -15,6 +15,7 @@
     "src/generated/prisma/**"
   ],
   "rules": {
+    "no-console": "warn",
     "no-unused-imports": "error",
     "no-unused-vars": [
       "error",
