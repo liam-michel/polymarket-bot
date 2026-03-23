@@ -1,8 +1,8 @@
 import { createCommand } from 'commander';
 
-import { AppConfig, initializeAppFromEnvironment } from '../app.js';
+import { type App, initializeAppFromEnvironment } from '../app.js';
 import { markets } from './commands/market.js';
-function getBeforeExitHandler({ logger }: AppConfig) {
+function getBeforeExitHandler({ logger }: App) {
   return async () => {
     logger.warn(
       'Uncaught error or unhandled promise rejection occurred, executing cleanup tasks',
@@ -19,6 +19,15 @@ async function main() {
   const beforeExitHandler = getBeforeExitHandler(app);
   process.on('uncaughtException', beforeExitHandler);
   process.on('unhandledRejection', beforeExitHandler);
+  // cleanup on graceful shutdown
+  process.on('SIGINT', async () => {
+    await app.cleanup();
+    process.exit(0);
+  });
+  process.on('SIGTERM', async () => {
+    await app.cleanup();
+    process.exit(0);
+  });
 
   //register commands
   p.addCommand(markets(app));
