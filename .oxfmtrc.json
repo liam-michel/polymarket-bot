@@ -27,6 +27,7 @@
     "dist/**",
     ".env",
     "*.d.ts",
+    ".github/workflows/**",
     "src/__generated__/**",
     "prisma/src/__generated__/**",
     "prisma/generated/**",
