@@ -20,6 +20,7 @@ describe('readConfig', () => {
 
     expect(config).toEqual({
       DATABASE_URL: 'postgres://localhost:5432/test',
+      LOG_LEVEL: 'info',
     });
   });
 

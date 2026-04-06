@@ -5,6 +5,10 @@
     "es2022": true,
     "node": true
   },
+  "options": {
+    "typeAware": true,
+    "typeCheck": true
+  },
   "ignorePatterns": [
     "node_modules/**",
     "dist/**",

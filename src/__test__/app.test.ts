@@ -9,17 +9,19 @@ import {
   initializeApp,
   instruction as instructionFactory,
 } from '~/app.js';
+import { GammaMarketApiClient } from '~/gamma/market/market.js';
 import type { Storage } from '~/storage/index.js';
 
 const storage = td.object<Storage>();
 const logger = td.object<Logger>();
+const gammaApiClient = td.object<GammaMarketApiClient>();
 
 let app: App;
 let instruction: AppInstruction<string>;
 
 beforeEach(() => {
   td.reset();
-  app = initializeApp({ storage, logger });
+  app = initializeApp({ storage, logger, gammaApiClient });
   instruction = td.function<AppInstruction<string>>();
 });
 

@@ -4,11 +4,10 @@ import type { Logger } from 'pino';
 import * as td from 'testdouble';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { initializeApp, type App } from '~/app.js';
+import { App, initializeApp } from '~/app.js';
 import { markets } from '~/cli/commands/market.js';
+import type { GammaMarketApiClient } from '~/gamma/market/market.js';
 import type { Storage } from '~/storage/index.js';
-import type { MarketStorage } from '~/storage/market.js';
-import type { WatchlistStorage } from '~/storage/watchlist.js';
 
 const testMarket = {
   condition_id: 'condition-123',
@@ -24,34 +23,14 @@ const testMarket = {
   created_at: new Date('2026-04-01T12:00:00.000Z'),
   updated_at: new Date('2026-04-02T12:00:00.000Z'),
 };
-
+const storage = td.object<Storage>();
+const logger = td.object<Logger>();
+const gammaApiClient = td.object<GammaMarketApiClient>();
+let app: App;
 describe('markets command', () => {
-  let app: App;
-  let logger: Logger;
-  let marketStorage: MarketStorage;
-  let watchlistStorage: WatchlistStorage;
-
   beforeEach(() => {
     td.reset();
-    marketStorage = {
-      listMarkets: td.function<MarketStorage['listMarkets']>(),
-      getMarketById: td.function<MarketStorage['getMarketById']>(),
-    };
-    watchlistStorage = {
-      listWatchlist: td.function<WatchlistStorage['listWatchlist']>(),
-      addToWatchlist: td.function<WatchlistStorage['addToWatchlist']>(),
-      removeFromWatchlist:
-        td.function<WatchlistStorage['removeFromWatchlist']>(),
-    };
-
-    const storage: Storage = {
-      market: marketStorage,
-      watchlist: watchlistStorage,
-      transaction: td.function<Storage['transaction']>(),
-    };
-
-    logger = td.object<Logger>();
-    app = initializeApp({ storage, logger });
+    app = initializeApp({ storage, logger, gammaApiClient });
   });
 
   const configureCommandTree = (command: Command) => {
@@ -74,7 +53,7 @@ describe('markets command', () => {
 
   it('fetches a market by condition ID', async () => {
     let requestedConditionId: string | undefined;
-    td.when(marketStorage.getMarketById(td.matchers.isA(String))).thenDo(
+    td.when(storage.market.getMarketById(td.matchers.isA(String))).thenDo(
       (conditionId: string) => {
         requestedConditionId = conditionId;
         return Promise.resolve(testMarket);
@@ -93,7 +72,7 @@ describe('markets command', () => {
 
   it('fails when the market does not exist', async () => {
     let requestedConditionId: string | undefined;
-    td.when(marketStorage.getMarketById(td.matchers.isA(String))).thenDo(
+    td.when(storage.market.getMarketById(td.matchers.isA(String))).thenDo(
       (conditionId: string) => {
         requestedConditionId = conditionId;
         return Promise.resolve(null);

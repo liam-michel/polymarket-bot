@@ -4,10 +4,10 @@ import type { Logger } from 'pino';
 import * as td from 'testdouble';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { initializeApp, type App } from '~/app.js';
+import { App, initializeApp } from '~/app.js';
 import { watchlist } from '~/cli/commands/watchlist.js';
+import { GammaMarketApiClient } from '~/gamma/market/market.js';
 import type { Storage } from '~/storage/index.js';
-import type { MarketStorage } from '~/storage/market.js';
 import type { WatchlistStorage } from '~/storage/watchlist.js';
 
 type AddWatchlistRequest = Parameters<WatchlistStorage['addToWatchlist']>[0];
@@ -20,36 +20,14 @@ const testWatchlistEntry = {
   added_at: new Date('2026-04-01T12:00:00.000Z'),
   removed_at: null,
 };
-
+const storage = td.object<Storage>();
+const logger = td.object<Logger>();
+const gammaApiClient = td.object<GammaMarketApiClient>();
+let app: App;
 describe('watchlist command', () => {
-  let app: App;
-  let logger: Logger;
-  let marketStorage: MarketStorage;
-  let watchlistStorage: WatchlistStorage;
-
   beforeEach(() => {
     td.reset();
-
-    marketStorage = {
-      listMarkets: td.function<MarketStorage['listMarkets']>(),
-      getMarketById: td.function<MarketStorage['getMarketById']>(),
-    };
-
-    watchlistStorage = {
-      listWatchlist: td.function<WatchlistStorage['listWatchlist']>(),
-      addToWatchlist: td.function<WatchlistStorage['addToWatchlist']>(),
-      removeFromWatchlist:
-        td.function<WatchlistStorage['removeFromWatchlist']>(),
-    };
-
-    const storage: Storage = {
-      market: marketStorage,
-      watchlist: watchlistStorage,
-      transaction: td.function<Storage['transaction']>(),
-    };
-
-    logger = td.object<Logger>();
-    app = initializeApp({ storage, logger });
+    app = initializeApp({ storage, logger, gammaApiClient });
   });
 
   const configureCommandTree = (command: Command) => {
@@ -71,7 +49,9 @@ describe('watchlist command', () => {
   };
 
   it('lists active watchlist entries', async () => {
-    td.when(watchlistStorage.listWatchlist()).thenResolve([testWatchlistEntry]);
+    td.when(storage.watchlist.listWatchlist()).thenResolve([
+      testWatchlistEntry,
+    ]);
 
     await createCommandUnderTest().parseAsync(['list'], {
       from: 'user',
@@ -89,7 +69,7 @@ describe('watchlist command', () => {
     let request: AddWatchlistRequest | undefined;
 
     td.when(
-      watchlistStorage.addToWatchlist(
+      storage.watchlist.addToWatchlist(
         td.matchers.contains({ wallet: '0xabc' }),
       ),
     ).thenDo((input: AddWatchlistRequest) => {
@@ -197,7 +177,7 @@ describe('watchlist command', () => {
     };
 
     td.when(
-      watchlistStorage.removeFromWatchlist(td.matchers.isA(String)),
+      storage.watchlist.removeFromWatchlist(td.matchers.isA(String)),
     ).thenDo((wallet: string) => {
       requestedWallet = wallet;
       return Promise.resolve(removedEntry);
@@ -217,7 +197,7 @@ describe('watchlist command', () => {
   });
 
   it('fails when removing a wallet that is not active', async () => {
-    td.when(watchlistStorage.removeFromWatchlist('0xmissing')).thenResolve(
+    td.when(storage.watchlist.removeFromWatchlist('0xmissing')).thenResolve(
       null,
     );
 

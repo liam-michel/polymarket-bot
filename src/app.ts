@@ -3,6 +3,10 @@ import type { Logger } from 'pino';
 import * as _ from 'radashi';
 import { v6 as randomUUID } from 'uuid';
 
+import {
+  createGammaMarketApiClient,
+  GammaMarketApiClient,
+} from './gamma/market/market.js';
 import { createStorage, type Storage } from './storage/index.js';
 import { AppConfig, readConfig } from './utils/config.js';
 import { createLogger } from './utils/logger.js';
@@ -28,6 +32,7 @@ type AppState = {
 export type AppDependencies = {
   storage: Storage;
   logger: Logger;
+  gammaApiClient: GammaMarketApiClient;
 };
 
 export type AppInstruction<TOutput> = (
@@ -169,13 +174,21 @@ export function initializeApp(appDependencies: AppDependencies): App {
   };
 }
 
-export const initializeAppWithConfig = async ({ DATABASE_URL }: AppConfig) => {
-  const logger = createLogger();
+export const initializeAppWithConfig = async ({
+  DATABASE_URL,
+  LOG_LEVEL,
+}: AppConfig) => {
+  //create base logger for entire application, will be passed to all relevant deps for good logging
+  const logger = createLogger(LOG_LEVEL);
   logger.info('Config loaded successfully');
+  //create storage instancce
   const storage = await createStorage(DATABASE_URL);
+  //GAMMA API client
+  const gammaApiClient = createGammaMarketApiClient({ logger });
   return initializeApp({
     storage,
     logger,
+    gammaApiClient,
   });
 };
 
