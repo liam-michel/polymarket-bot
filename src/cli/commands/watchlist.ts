@@ -1,11 +1,17 @@
 import { createCommand, InvalidArgumentError } from 'commander';
 import { Decimal } from 'decimal.js';
+import { z } from 'zod';
 
 import { App, instruction } from '~/app.js';
 
 const WATCHLIST_SCORE_PRECISION = 10;
 const WATCHLIST_SCORE_SCALE = 4;
 const WATCHLIST_SCORE_MAX = new Decimal('999999.9999');
+const WATCHLIST_ADD_INPUT = z.object({
+  wallet: z.string().min(1, 'Wallet address is required'),
+  reason: z.string().min(1, 'Reason is required'),
+  score: z.string().min(1, 'Score is required'),
+});
 
 function parseWatchlistScore(value: string) {
   let score: Decimal;
@@ -37,6 +43,22 @@ function parseWatchlistScore(value: string) {
   return score.toString();
 }
 
+function parseWatchlistAddInput(input: z.input<typeof WATCHLIST_ADD_INPUT>) {
+  const result = WATCHLIST_ADD_INPUT.safeParse(input);
+
+  if (!result.success) {
+    throw new InvalidArgumentError(
+      result.error.issues[0]?.message ?? 'Invalid input',
+    );
+  }
+
+  return {
+    wallet: result.data.wallet,
+    reason: result.data.reason,
+    score: parseWatchlistScore(result.data.score),
+  };
+}
+
 const listWatchlist = (app: App) =>
   createCommand('list')
     .description('List active watchlist entries')
@@ -54,29 +76,23 @@ const addToWatchlist = (app: App) =>
   createCommand('add')
     .description('Add or reactivate a wallet in the watchlist')
     .argument('<wallet>', 'Wallet address to watch')
-    .requiredOption('--reason <reason>', 'Reason for adding the wallet')
-    .requiredOption(
-      '--score <score>',
-      'Watchlist score as a decimal value',
-      parseWatchlistScore,
-    )
-    .action(
-      async (wallet: string, options: { reason: string; score: string }) => {
-        const result = await app
-          .execute(({ storage }) =>
-            instruction(() =>
-              storage.watchlist.addToWatchlist({
-                wallet,
-                reason: options.reason,
-                score: options.score,
-              }),
-            ),
-          )
-          .once();
+    .argument('<reason>', 'Reason for adding the wallet')
+    .argument('<score>', 'Watchlist score as a decimal value')
+    .action(async (wallet: string, reason: string, score: string) => {
+      const input = parseWatchlistAddInput({
+        wallet,
+        reason,
+        score,
+      });
 
-        app.logger.info({ result }, 'Watchlist entry added successfully');
-      },
-    );
+      const result = await app
+        .execute(({ storage }) =>
+          instruction(() => storage.watchlist.addToWatchlist(input)),
+        )
+        .once();
+
+      app.logger.info({ result }, 'Watchlist entry added successfully');
+    });
 
 const removeFromWatchlist = (app: App) =>
   createCommand('remove')

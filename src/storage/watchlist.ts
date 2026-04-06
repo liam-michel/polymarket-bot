@@ -13,6 +13,25 @@ export type WatchlistStorage = {
   removeFromWatchlist: (wallet: string) => Promise<Models['Watchlist'] | null>;
 };
 
+type WatchlistRecord = {
+  wallet: string;
+  reason: string;
+  score: string;
+  active: boolean;
+  added_at?: Date;
+  removed_at?: Date | null;
+  addedAt?: Date;
+  removedAt?: Date | null;
+};
+
+function parseWatchlistRecord(record: WatchlistRecord) {
+  return Models['Watchlist'].parse({
+    ...record,
+    added_at: record.added_at ?? record.addedAt,
+    removed_at: record.removed_at ?? record.removedAt ?? null,
+  });
+}
+
 function listWatchlist(db: KyselyDB): WatchlistStorage['listWatchlist'] {
   return async function () {
     const results = await db
@@ -24,7 +43,9 @@ function listWatchlist(db: KyselyDB): WatchlistStorage['listWatchlist'] {
       .orderBy('added_at', 'desc')
       .execute();
 
-    return results.map((result) => Models['Watchlist'].parse(result));
+    return results.map((result) =>
+      parseWatchlistRecord(result as WatchlistRecord),
+    );
   };
 }
 
@@ -51,7 +72,7 @@ function addToWatchlist(db: KyselyDB): WatchlistStorage['addToWatchlist'] {
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return Models['Watchlist'].parse(result);
+    return parseWatchlistRecord(result as WatchlistRecord);
   };
 }
 
@@ -75,7 +96,7 @@ function removeFromWatchlist(
       return null;
     }
 
-    return Models['Watchlist'].parse(result);
+    return parseWatchlistRecord(result as WatchlistRecord);
   };
 }
 

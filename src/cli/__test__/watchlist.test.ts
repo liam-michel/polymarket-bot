@@ -98,7 +98,7 @@ describe('watchlist command', () => {
     });
 
     await createCommandUnderTest().parseAsync(
-      ['add', '0xabc', '--reason', 'high signal trader', '--score', '1.2500'],
+      ['add', '0xabc', 'high signal trader', '1.2500'],
       {
         from: 'user',
       },
@@ -117,23 +117,23 @@ describe('watchlist command', () => {
     );
   });
 
-  it('requires the add command score option', async () => {
+  it('requires the add command score argument', async () => {
     await expect(
       createCommandUnderTest().parseAsync(
-        ['add', '0xabc', '--reason', 'high signal trader'],
+        ['add', '0xabc', 'high signal trader'],
         {
           from: 'user',
         },
       ),
     ).rejects.toMatchObject({
-      code: 'commander.missingMandatoryOptionValue',
+      code: 'commander.missingArgument',
     });
   });
 
   it('rejects an invalid score value', async () => {
     await expect(
       createCommandUnderTest().parseAsync(
-        ['add', '0xabc', '--reason', 'high signal trader', '--score', 'wat'],
+        ['add', '0xabc', 'high signal trader', 'wat'],
         {
           from: 'user',
         },
@@ -144,14 +144,7 @@ describe('watchlist command', () => {
   it('rejects a non-finite score value', async () => {
     await expect(
       createCommandUnderTest().parseAsync(
-        [
-          'add',
-          '0xabc',
-          '--reason',
-          'high signal trader',
-          '--score',
-          'Infinity',
-        ],
+        ['add', '0xabc', 'high signal trader', 'Infinity'],
         {
           from: 'user',
         },
@@ -164,14 +157,7 @@ describe('watchlist command', () => {
   it('rejects a score with too many decimal places', async () => {
     await expect(
       createCommandUnderTest().parseAsync(
-        [
-          'add',
-          '0xabc',
-          '--reason',
-          'high signal trader',
-          '--score',
-          '1.23456',
-        ],
+        ['add', '0xabc', 'high signal trader', '1.23456'],
         {
           from: 'user',
         },
@@ -184,14 +170,7 @@ describe('watchlist command', () => {
   it('rejects a score that exceeds DECIMAL(10,4)', async () => {
     await expect(
       createCommandUnderTest().parseAsync(
-        [
-          'add',
-          '0xabc',
-          '--reason',
-          'high signal trader',
-          '--score',
-          '1000000',
-        ],
+        ['add', '0xabc', 'high signal trader', '1000000'],
         {
           from: 'user',
         },
@@ -199,6 +178,14 @@ describe('watchlist command', () => {
     ).rejects.toThrow(
       'Invalid score "1000000": score must fit within DECIMAL(10,4)',
     );
+  });
+
+  it('rejects an empty reason', async () => {
+    await expect(
+      createCommandUnderTest().parseAsync(['add', '0xabc', '', '1.2500'], {
+        from: 'user',
+      }),
+    ).rejects.toThrow('Reason is required');
   });
 
   it('removes an active watchlist entry', async () => {
