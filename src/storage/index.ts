@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { CamelCasePlugin, Kysely, PostgresDialect } from 'kysely';
+import { Kysely, PostgresDialect } from 'kysely';
 import pg from 'pg';
 
 import { createMarketStorage, type MarketStorage } from './market.js';
@@ -34,7 +34,6 @@ function createPostgresConnection(connectionString: string) {
   });
   const db = new Kysely<generated.DB>({
     dialect,
-    plugins: [new CamelCasePlugin()],
   });
 
   return {

@@ -12,15 +12,6 @@ const activeWatchlistRow = {
   removed_at: null,
 };
 
-const activeCamelCaseWatchlistRow = {
-  wallet: '0xdef',
-  reason: 'recently reactivated trader',
-  score: '2.5000',
-  active: true,
-  addedAt: new Date('2026-04-04T12:00:00.000Z'),
-  removedAt: null,
-};
-
 describe('createWatchlistStorage', () => {
   it('lists active watchlist entries ordered by score and added_at', async () => {
     const recorded = {
@@ -64,32 +55,6 @@ describe('createWatchlistStorage', () => {
       {
         ...activeWatchlistRow,
         score: new Decimal('1.2500'),
-      },
-    ]);
-  });
-
-  it('parses camelCase watchlist rows returned by the DB layer', async () => {
-    const builder = {
-      where: () => builder,
-      selectAll: () => builder,
-      orderBy: () => builder,
-      execute: async () => [activeCamelCaseWatchlistRow],
-    };
-
-    const db = {
-      selectFrom: () => builder,
-    };
-
-    const result = await createWatchlistStorage(db as never).listWatchlist();
-
-    expect(result).toEqual([
-      {
-        wallet: '0xdef',
-        reason: 'recently reactivated trader',
-        score: new Decimal('2.5000'),
-        active: true,
-        added_at: new Date('2026-04-04T12:00:00.000Z'),
-        removed_at: null,
       },
     ]);
   });
