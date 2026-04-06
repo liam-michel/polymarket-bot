@@ -141,6 +141,66 @@ describe('watchlist command', () => {
     ).rejects.toThrow('Invalid score "wat"');
   });
 
+  it('rejects a non-finite score value', async () => {
+    await expect(
+      createCommandUnderTest().parseAsync(
+        [
+          'add',
+          '0xabc',
+          '--reason',
+          'high signal trader',
+          '--score',
+          'Infinity',
+        ],
+        {
+          from: 'user',
+        },
+      ),
+    ).rejects.toThrow(
+      'Invalid score "Infinity": score must be a finite decimal number',
+    );
+  });
+
+  it('rejects a score with too many decimal places', async () => {
+    await expect(
+      createCommandUnderTest().parseAsync(
+        [
+          'add',
+          '0xabc',
+          '--reason',
+          'high signal trader',
+          '--score',
+          '1.23456',
+        ],
+        {
+          from: 'user',
+        },
+      ),
+    ).rejects.toThrow(
+      'Invalid score "1.23456": score must have no more than 4 decimal places',
+    );
+  });
+
+  it('rejects a score that exceeds DECIMAL(10,4)', async () => {
+    await expect(
+      createCommandUnderTest().parseAsync(
+        [
+          'add',
+          '0xabc',
+          '--reason',
+          'high signal trader',
+          '--score',
+          '1000000',
+        ],
+        {
+          from: 'user',
+        },
+      ),
+    ).rejects.toThrow(
+      'Invalid score "1000000": score must fit within DECIMAL(10,4)',
+    );
+  });
+
   it('removes an active watchlist entry', async () => {
     let requestedWallet: string | undefined;
     const removedEntry = {

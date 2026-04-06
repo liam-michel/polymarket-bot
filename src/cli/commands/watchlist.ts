@@ -3,12 +3,38 @@ import { Decimal } from 'decimal.js';
 
 import { App, instruction } from '~/app.js';
 
+const WATCHLIST_SCORE_PRECISION = 10;
+const WATCHLIST_SCORE_SCALE = 4;
+const WATCHLIST_SCORE_MAX = new Decimal('999999.9999');
+
 function parseWatchlistScore(value: string) {
+  let score: Decimal;
+
   try {
-    return new Decimal(value).toString();
+    score = new Decimal(value);
   } catch {
     throw new InvalidArgumentError(`Invalid score "${value}"`);
   }
+
+  if (!score.isFinite()) {
+    throw new InvalidArgumentError(
+      `Invalid score "${value}": score must be a finite decimal number`,
+    );
+  }
+
+  if (score.decimalPlaces() > WATCHLIST_SCORE_SCALE) {
+    throw new InvalidArgumentError(
+      `Invalid score "${value}": score must have no more than ${WATCHLIST_SCORE_SCALE} decimal places`,
+    );
+  }
+
+  if (score.abs().greaterThan(WATCHLIST_SCORE_MAX)) {
+    throw new InvalidArgumentError(
+      `Invalid score "${value}": score must fit within DECIMAL(${WATCHLIST_SCORE_PRECISION},${WATCHLIST_SCORE_SCALE})`,
+    );
+  }
+
+  return score.toString();
 }
 
 const listWatchlist = (app: App) =>

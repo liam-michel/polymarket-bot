@@ -68,6 +68,7 @@ describe('createWatchlistStorage', () => {
         score: string;
         active: boolean;
         removed_at: null;
+        added_at: Date;
       };
       values?: {
         wallet: string;
@@ -87,6 +88,7 @@ describe('createWatchlistStorage', () => {
             score: string;
             active: boolean;
             removed_at: null;
+            added_at: Date;
           }) => {
             recorded.updateSet = updateSet;
             return updateSet;
@@ -136,12 +138,13 @@ describe('createWatchlistStorage', () => {
       removed_at: null,
     });
     expect(recorded.conflictColumn).toBe('wallet');
-    expect(recorded.updateSet).toEqual({
+    expect(recorded.updateSet).toMatchObject({
       reason: 'high signal trader',
       score: '1.2500',
       active: true,
       removed_at: null,
     });
+    expect(recorded.updateSet?.added_at).toBeInstanceOf(Date);
     expect(result).toEqual({
       ...activeWatchlistRow,
       score: new Decimal('1.2500'),

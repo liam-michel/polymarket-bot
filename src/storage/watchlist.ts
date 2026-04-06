@@ -45,6 +45,7 @@ function addToWatchlist(db: KyselyDB): WatchlistStorage['addToWatchlist'] {
           score,
           active: true,
           removed_at: null,
+          added_at: new Date(),
         }),
       )
       .returningAll()
