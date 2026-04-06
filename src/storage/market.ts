@@ -9,7 +9,7 @@ export type MarketStorage = {
 function listMarkets(db: KyselyDB): MarketStorage['listMarkets'] {
   return async function () {
     const results = await db.selectFrom('markets').selectAll().execute();
-    return results.map((result) => Models['Market'].parse(result));
+    return Models['Market'].array().parse(results);
   };
 }
 

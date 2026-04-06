@@ -1,4 +1,4 @@
-import { createArgument, createCommand } from 'commander';
+import { createCommand, createOption } from 'commander';
 import { z } from 'zod';
 
 import { App, instruction } from '~/app.js';
@@ -24,21 +24,22 @@ const listMarkets = (app: App) =>
 const listResolvedMarkets = (app: App) =>
   createCommand('list-resolved-markets')
     .description('List resolved markets from Gamma API')
-    .addArgument(
-      createArgument('[count]', 'Number of resolved markets to fetch')
+    .addOption(
+      createOption('--count <number>', 'Number of resolved markets to fetch')
         .default(1)
         .argParser(Number),
     )
-    .addArgument(
-      createArgument('[offset]', 'Number of resolved markets to skip')
+    .addOption(
+      createOption('--offset <number>', 'Number of resolved markets to skip')
         .default(0)
         .argParser(Number),
     )
-    .addArgument(
-      createArgument('[asc]', 'Sort markets in ascending order')
+    .addOption(
+      createOption('--asc <boolean>', 'Sort markets in ascending order')
         .default(false)
-        .argParser((value) => value === 'true'),
+        .argParser(Boolean),
     )
+
     .action(async (count, offset, asc) => {
       const parsedArgs = listMarketSchema.parse({ count, offset, asc });
       const result = await app

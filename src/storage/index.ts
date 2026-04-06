@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { PostgresDialect, CamelCasePlugin } from 'kysely';
+import { PostgresDialect } from 'kysely';
 import { Kysely } from 'kysely';
 import pg from 'pg';
 
@@ -30,7 +30,6 @@ function createPostgresConnection(connectionString: string) {
   });
   const db = new Kysely<generated.DB>({
     dialect,
-    plugins: [new CamelCasePlugin()],
   });
   return {
     db,
