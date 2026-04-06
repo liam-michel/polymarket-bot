@@ -6,8 +6,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { initializeApp, type App } from '~/app.js';
 import { markets } from '~/cli/commands/market.js';
-import type { Storage } from '~/storage/index.js';
 import type { MarketStorage } from '~/storage/market.js';
+
+type MarketCommandStorage = {
+  market: MarketStorage;
+};
 
 const testMarket = {
   condition_id: 'condition-123',
@@ -25,7 +28,7 @@ const testMarket = {
 };
 
 describe('markets command', () => {
-  let app: App;
+  let app: App<MarketCommandStorage>;
   let logger: Logger;
   let marketStorage: MarketStorage;
 
@@ -36,9 +39,8 @@ describe('markets command', () => {
       getMarketById: td.function<MarketStorage['getMarketById']>(),
     };
 
-    const storage: Storage = {
+    const storage: MarketCommandStorage = {
       market: marketStorage,
-      transaction: td.function<Storage['transaction']>(),
     };
 
     logger = td.object<Logger>();

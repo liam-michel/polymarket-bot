@@ -1,8 +1,13 @@
 import { createCommand } from 'commander';
 
-import { App, instruction } from '~/app.js';
+import { type App, instruction } from '~/app.js';
+import type { Storage } from '~/storage/index.js';
 
-const listMarkets = (app: App) =>
+type MarketCommandStorage = Pick<Storage, 'market'>;
+
+const listMarkets = <TStorage extends MarketCommandStorage>(
+  app: App<TStorage>,
+) =>
   createCommand('list-markets')
     .description('List all available markets')
     .action(async () => {
@@ -14,7 +19,7 @@ const listMarkets = (app: App) =>
       app.logger.info({ result }, 'Markets listed successfully');
     });
 
-const getMarket = (app: App) =>
+const getMarket = <TStorage extends MarketCommandStorage>(app: App<TStorage>) =>
   createCommand('get')
     .description('Get a market by condition ID')
     .argument('<conditionId>', 'Market condition ID')
@@ -34,7 +39,9 @@ const getMarket = (app: App) =>
       app.logger.info({ result }, 'Market fetched successfully');
     });
 
-export const markets = (app: App) => {
+export const markets = <TStorage extends MarketCommandStorage>(
+  app: App<TStorage>,
+) => {
   const parentCommand = createCommand('markets').description(
     'Commands related to markets',
   );

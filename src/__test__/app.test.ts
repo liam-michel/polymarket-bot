@@ -25,16 +25,18 @@ beforeEach(() => {
 
 describe('execute:once', () => {
   it('should execute the instruction once', async () => {
-    td.when(
-      instruction(td.matchers.anything(), td.matchers.anything()),
-    ).thenReturn(instructionFactory(() => Promise.resolve('test')));
+    let executionCount = 0;
+    td.when(instruction(td.matchers.anything(), td.matchers.anything())).thenDo(
+      () => {
+        executionCount++;
+        return instructionFactory(() => Promise.resolve('test'));
+      },
+    );
 
     const result = await app.execute(instruction).once();
 
     expect(result).toBe('test');
-    td.verify(instruction(td.matchers.anything(), td.matchers.anything()), {
-      times: 1,
-    });
+    expect(executionCount).toBe(1);
   });
 });
 

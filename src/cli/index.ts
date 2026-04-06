@@ -2,6 +2,7 @@ import { createCommand } from 'commander';
 
 import { type App, initializeAppFromEnvironment } from '../app.js';
 import { markets } from './commands/market.js';
+import { watchlist } from './commands/watchlist.js';
 function getBeforeExitHandler({ logger }: App) {
   return async () => {
     logger.warn(
@@ -50,6 +51,7 @@ async function main() {
 
   //register commands
   p.addCommand(markets(app));
+  p.addCommand(watchlist(app));
   await p
     .parseAsync(process.argv)
     .then(() => {
