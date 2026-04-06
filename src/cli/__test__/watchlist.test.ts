@@ -6,11 +6,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { initializeApp, type App } from '~/app.js';
 import { watchlist } from '~/cli/commands/watchlist.js';
+import type { Storage } from '~/storage/index.js';
+import type { MarketStorage } from '~/storage/market.js';
 import type { WatchlistStorage } from '~/storage/watchlist.js';
-
-type WatchlistCommandStorage = {
-  watchlist: WatchlistStorage;
-};
 
 type AddWatchlistRequest = Parameters<WatchlistStorage['addToWatchlist']>[0];
 
@@ -24,12 +22,18 @@ const testWatchlistEntry = {
 };
 
 describe('watchlist command', () => {
-  let app: App<WatchlistCommandStorage>;
+  let app: App;
   let logger: Logger;
+  let marketStorage: MarketStorage;
   let watchlistStorage: WatchlistStorage;
 
   beforeEach(() => {
     td.reset();
+
+    marketStorage = {
+      listMarkets: td.function<MarketStorage['listMarkets']>(),
+      getMarketById: td.function<MarketStorage['getMarketById']>(),
+    };
 
     watchlistStorage = {
       listWatchlist: td.function<WatchlistStorage['listWatchlist']>(),
@@ -38,8 +42,10 @@ describe('watchlist command', () => {
         td.function<WatchlistStorage['removeFromWatchlist']>(),
     };
 
-    const storage: WatchlistCommandStorage = {
+    const storage: Storage = {
+      market: marketStorage,
       watchlist: watchlistStorage,
+      transaction: td.function<Storage['transaction']>(),
     };
 
     logger = td.object<Logger>();

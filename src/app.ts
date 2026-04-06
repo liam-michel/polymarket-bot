@@ -25,13 +25,13 @@ type AppState = {
   errorHandlers: Record<string, ErrorHandler>;
 };
 
-export type AppDependencies<TStorage = Storage> = {
-  storage: TStorage;
+export type AppDependencies = {
+  storage: Storage;
   logger: Logger;
 };
 
-export type AppInstruction<TOutput, TStorage = Storage> = (
-  deps: AppDependencies<TStorage>,
+export type AppInstruction<TOutput> = (
+  deps: AppDependencies,
   operationId: string,
 ) => InstructionBuilder<TOutput>;
 
@@ -61,8 +61,8 @@ export function instruction<T>(
 }
 type CancelCallback = () => void;
 
-export type App<TStorage = Storage> = {
-  execute: <TOutput>(instruction: AppInstruction<TOutput, TStorage>) => {
+export type App = {
+  execute: <TOutput>(instruction: AppInstruction<TOutput>) => {
     once: () => Promise<TOutput>;
     times: (times: number) => Promise<TOutput[]>;
     every: (intervalMs: number) => CancelCallback;
@@ -71,14 +71,12 @@ export type App<TStorage = Storage> = {
   logger: Logger;
 };
 
-export function initializeApp<TStorage>(
-  appDependencies: AppDependencies<TStorage>,
-): App<TStorage> {
+export function initializeApp(appDependencies: AppDependencies): App {
   const state: AppState = {
     errorHandlers: {},
   };
 
-  const execute = <TOutput>(instruction: AppInstruction<TOutput, TStorage>) => {
+  const execute = <TOutput>(instruction: AppInstruction<TOutput>) => {
     const runInstruction = async (operationId: string): Promise<TOutput> => {
       const builder = instruction(appDependencies, operationId);
       const { executor, errorHandler, successHandler } = builder.build();

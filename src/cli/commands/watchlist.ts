@@ -1,10 +1,7 @@
 import { createCommand, InvalidArgumentError } from 'commander';
 import { Decimal } from 'decimal.js';
 
-import { type App, instruction } from '~/app.js';
-import type { Storage } from '~/storage/index.js';
-
-type WatchlistCommandStorage = Pick<Storage, 'watchlist'>;
+import { App, instruction } from '~/app.js';
 
 function parseWatchlistScore(value: string) {
   try {
@@ -14,9 +11,7 @@ function parseWatchlistScore(value: string) {
   }
 }
 
-const listWatchlist = <TStorage extends WatchlistCommandStorage>(
-  app: App<TStorage>,
-) =>
+const listWatchlist = (app: App) =>
   createCommand('list')
     .description('List active watchlist entries')
     .action(async () => {
@@ -29,9 +24,7 @@ const listWatchlist = <TStorage extends WatchlistCommandStorage>(
       app.logger.info({ result }, 'Watchlist listed successfully');
     });
 
-const addToWatchlist = <TStorage extends WatchlistCommandStorage>(
-  app: App<TStorage>,
-) =>
+const addToWatchlist = (app: App) =>
   createCommand('add')
     .description('Add or reactivate a wallet in the watchlist')
     .argument('<wallet>', 'Wallet address to watch')
@@ -59,9 +52,7 @@ const addToWatchlist = <TStorage extends WatchlistCommandStorage>(
       },
     );
 
-const removeFromWatchlist = <TStorage extends WatchlistCommandStorage>(
-  app: App<TStorage>,
-) =>
+const removeFromWatchlist = (app: App) =>
   createCommand('remove')
     .description('Remove a wallet from the active watchlist')
     .argument('<wallet>', 'Wallet address to remove from the watchlist')
@@ -79,9 +70,7 @@ const removeFromWatchlist = <TStorage extends WatchlistCommandStorage>(
       app.logger.info({ result }, 'Watchlist entry removed successfully');
     });
 
-export const watchlist = <TStorage extends WatchlistCommandStorage>(
-  app: App<TStorage>,
-) => {
+export const watchlist = (app: App) => {
   const parentCommand = createCommand('watchlist').description(
     'Commands related to tracked wallets',
   );
