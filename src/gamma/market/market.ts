@@ -1,5 +1,6 @@
 import { Logger } from 'pino';
 import { z } from 'zod';
+
 import { handleResponse } from '../api.js';
 type Dependencies = {
   logger: Logger;

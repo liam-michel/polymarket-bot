@@ -48,6 +48,8 @@ const listResolvedMarkets = (app: App) =>
         )
         .once();
       app.logger.info({ result }, 'Resolved markets listed successfully');
+    });
+
 const getMarket = (app: App) =>
   createCommand('get')
     .description('Get a market by condition ID')
