@@ -8,6 +8,7 @@ import { initializeApp, type App } from '~/app.js';
 import { markets } from '~/cli/commands/market.js';
 import type { Storage } from '~/storage/index.js';
 import type { MarketStorage } from '~/storage/market.js';
+import type { WatchlistStorage } from '~/storage/watchlist.js';
 
 const testMarket = {
   condition_id: 'condition-123',
@@ -28,6 +29,7 @@ describe('markets command', () => {
   let app: App;
   let logger: Logger;
   let marketStorage: MarketStorage;
+  let watchlistStorage: WatchlistStorage;
 
   beforeEach(() => {
     td.reset();
@@ -35,9 +37,16 @@ describe('markets command', () => {
       listMarkets: td.function<MarketStorage['listMarkets']>(),
       getMarketById: td.function<MarketStorage['getMarketById']>(),
     };
+    watchlistStorage = {
+      listWatchlist: td.function<WatchlistStorage['listWatchlist']>(),
+      addToWatchlist: td.function<WatchlistStorage['addToWatchlist']>(),
+      removeFromWatchlist:
+        td.function<WatchlistStorage['removeFromWatchlist']>(),
+    };
 
     const storage: Storage = {
       market: marketStorage,
+      watchlist: watchlistStorage,
       transaction: td.function<Storage['transaction']>(),
     };
 

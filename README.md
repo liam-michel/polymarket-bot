@@ -35,3 +35,13 @@ bun run lint
 bun run format
 bun run format:check
 ```
+
+CLI examples:
+
+```bash
+bun run startcli -- markets list-markets
+bun run startcli -- markets get <conditionId>
+bun run startcli -- watchlist list
+bun run startcli -- watchlist add <wallet> "high signal trader" 1.25
+bun run startcli -- watchlist remove <wallet>
+```

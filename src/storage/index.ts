@@ -1,22 +1,26 @@
 import assert from 'assert';
-import { PostgresDialect, CamelCasePlugin } from 'kysely';
-import { Kysely } from 'kysely';
+import { Kysely, PostgresDialect } from 'kysely';
 import pg from 'pg';
 
-import { createMarketStorage, MarketStorage } from './market.js';
-import { KyselyDB } from './types.js';
+import { createMarketStorage, type MarketStorage } from './market.js';
+import type { KyselyDB } from './types.js';
+import { createWatchlistStorage, type WatchlistStorage } from './watchlist.js';
 import * as generated from '~/__generated__/database.js';
+
 export type Storage = {
   market: MarketStorage;
+  watchlist: WatchlistStorage;
   transaction: <T>(
     callback: (repo: Readonly<Omit<Storage, 'transaction'>>) => Promise<T>,
   ) => Promise<T>;
 };
+
 export type Repo = Omit<Storage, 'transaction'>;
 
 function wrapKyselyDb(db: KyselyDB) {
   return {
     market: createMarketStorage(db),
+    watchlist: createWatchlistStorage(db),
   };
 }
 
@@ -30,8 +34,8 @@ function createPostgresConnection(connectionString: string) {
   });
   const db = new Kysely<generated.DB>({
     dialect,
-    plugins: [new CamelCasePlugin()],
   });
+
   return {
     db,
     dialect,
@@ -51,7 +55,9 @@ export async function createStorage(
 ): Promise<Storage> {
   const { db, pool } = createPostgresConnection(connectionString);
   const isConnected = await checkPostgresConnection(pool);
+
   assert(isConnected, 'Failed to connect to Postgres database');
+
   return {
     ...wrapKyselyDb(db),
     transaction: async <T>(
