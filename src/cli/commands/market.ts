@@ -48,12 +48,31 @@ const listResolvedMarkets = (app: App) =>
         )
         .once();
       app.logger.info({ result }, 'Resolved markets listed successfully');
+const getMarket = (app: App) =>
+  createCommand('get')
+    .description('Get a market by condition ID')
+    .argument('<conditionId>', 'Market condition ID')
+    .action(async (conditionId: string) => {
+      const result = await app
+        .execute(({ storage }) =>
+          instruction(() => storage.market.getMarketById(conditionId)),
+        )
+        .once();
+
+      if (!result) {
+        throw new Error(
+          `Market with condition ID "${conditionId}" was not found`,
+        );
+      }
+
+      app.logger.info({ result }, 'Market fetched successfully');
     });
 
 export const markets = (app: App) => {
   const parentCommand = createCommand('markets').description(
     'Commands related to markets',
   );
+  parentCommand.addCommand(getMarket(app));
   parentCommand.addCommand(listMarkets(app));
   parentCommand.addCommand(listResolvedMarkets(app));
   return parentCommand;

@@ -10,6 +10,7 @@
     "dist/**",
     ".env",
     "*.d.ts",
+    "src/__generated__/**",
     "prisma/src/__generated__/**",
     "prisma/generated/**",
     "src/generated/prisma/**"
