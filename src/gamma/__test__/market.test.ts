@@ -86,3 +86,88 @@ describe('scrapeResolvedMarkets', () => {
     );
   });
 });
+
+describe('getMarketById', () => {
+  it('should fetch a market by condition ID', async () => {
+    const mockResponse = {
+      ok: true,
+      status: 200,
+      json: async () => [
+        {
+          id: '1',
+          question: 'Will it rain tomorrow?',
+          description: null,
+          conditionId: 'condition-123',
+          outcomes: '["Yes","No"]',
+          endDate: '2026-04-10T12:00:00.000Z',
+          volume: '1234.56',
+          active: true,
+          closed: false,
+        },
+      ],
+    } as Response;
+    td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
+
+    const market = await gammaApiClient.getMarketById('condition-123');
+
+    td.verify(
+      global.fetch(
+        'https://gamma-api.polymarket.com/markets?condition_ids=condition-123',
+      ),
+      { times: 1 },
+    );
+    expect(market).toEqual({
+      id: '1',
+      question: 'Will it rain tomorrow?',
+      description: null,
+      conditionId: 'condition-123',
+      outcomes: '["Yes","No"]',
+      endDate: '2026-04-10T12:00:00.000Z',
+      volume: '1234.56',
+      active: true,
+      closed: false,
+    });
+    td.verify(
+      logger.error(
+        td.matchers.anything(),
+        'Failed to fetch market by condition ID',
+      ),
+      { times: 0 },
+    );
+  });
+
+  it('should return null when Gamma returns no matching market', async () => {
+    const mockResponse = {
+      ok: true,
+      status: 200,
+      json: async () => [],
+    } as Response;
+    td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
+
+    await expect(
+      gammaApiClient.getMarketById('condition-123'),
+    ).resolves.toBeNull();
+  });
+
+  it('should log an error if fetching a market fails', async () => {
+    const mockResponse = {
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+    } as Response;
+    td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
+
+    await expect(gammaApiClient.getMarketById('condition-123')).rejects.toThrow(
+      'Failed to fetch market by condition ID',
+    );
+    td.verify(
+      logger.error(
+        {
+          response: mockResponse,
+        },
+        'Failed to fetch market by condition ID',
+      ),
+      { times: 1 },
+    );
+  });
+});
