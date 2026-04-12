@@ -28,6 +28,7 @@ describe('scrapeResolvedMarkets', () => {
         {
           id: '1',
           question: 'Will it rain tomorrow?',
+          category: 'Weather',
           description: null,
           closed: true,
         },
@@ -50,6 +51,7 @@ describe('scrapeResolvedMarkets', () => {
       {
         id: '1',
         question: 'Will it rain tomorrow?',
+        category: 'Weather',
         description: null,
         closed: true,
       },
@@ -96,6 +98,7 @@ describe('getMarketById', () => {
         {
           id: '1',
           question: 'Will it rain tomorrow?',
+          category: 'Weather',
           description: null,
           conditionId: 'condition-123',
           outcomes: '["Yes","No"]',
@@ -119,6 +122,7 @@ describe('getMarketById', () => {
     expect(market).toEqual({
       id: '1',
       question: 'Will it rain tomorrow?',
+      category: 'Weather',
       description: null,
       conditionId: 'condition-123',
       outcomes: '["Yes","No"]',

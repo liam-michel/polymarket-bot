@@ -2,6 +2,8 @@ import { Logger } from 'pino';
 import { z } from 'zod';
 
 import { handleResponse } from '../api.js';
+import { Models } from '~/storage/models.js';
+
 type Dependencies = {
   logger: Logger;
 };
@@ -13,11 +15,18 @@ export type GammaMarketApiClient = {
     offset: number;
     asc: boolean;
   }) => Promise<ResolvedGammaMarket[]>;
+  getMarketsByCategory: (data: {
+    category: Models['Category'];
+    count: number;
+    offset: number;
+    asc: boolean;
+  }) => Promise<GammaMarket[]>;
 };
 
 const ResolvedMarketApiSchema = z.object({
   id: z.string(),
   question: z.string(),
+  category: Models.Category,
   description: z.string().nullable(),
   closed: z.boolean(),
 });
@@ -71,9 +80,31 @@ function scrapeResolvedMarkets(
   };
 }
 
-export const createGammaMarketApiClient = (deps: Dependencies) => {
+function getMarketsByCategory(
+  deps: Dependencies,
+): GammaMarketApiClient['getMarketsByCategory'] {
+  return async function (data) {
+    const { category, count, offset, asc } = data;
+    const { logger } = deps;
+    const response = await fetch(
+      `https://gamma-api.polymarket.com/markets?category=${category}&limit=${count}&offset=${offset}&asc=${asc}`,
+    );
+    const markets = await handleResponse(
+      response,
+      MarketApiSchema.array(),
+      logger,
+      'Failed to fetch markets by category',
+    );
+    return markets;
+  };
+}
+
+export const createGammaMarketApiClient = (
+  deps: Dependencies,
+): GammaMarketApiClient => {
   return {
     getMarketById: getMarketById(deps),
     scrapeResolvedMarkets: scrapeResolvedMarkets(deps),
+    getMarketsByCategory: getMarketsByCategory(deps),
   };
 };

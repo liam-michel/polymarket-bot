@@ -1,9 +1,9 @@
 import { Decimal } from 'decimal.js';
 import { describe, expect, it } from 'vitest';
 
-import { createWatchlistStorage } from '~/storage/watchlist.js';
+import { createWalletStorage } from '~/storage/wallet.js';
 
-const activeWatchlistRow = {
+const activeWalletRow = {
   wallet: '0xabc',
   reason: 'high signal trader',
   score: '1.2500',
@@ -12,8 +12,8 @@ const activeWatchlistRow = {
   removed_at: null,
 };
 
-describe('createWatchlistStorage', () => {
-  it('lists active watchlist entries ordered by score and added_at', async () => {
+describe('createWalletStorage', () => {
+  it('lists active wallets ordered by score and added_at', async () => {
     const recorded = {
       orderBy: [] as Array<[string, 'asc' | 'desc']>,
       table: '',
@@ -30,7 +30,7 @@ describe('createWatchlistStorage', () => {
         recorded.orderBy.push([column, direction]);
         return builder;
       },
-      execute: async () => [activeWatchlistRow],
+      execute: async () => [activeWalletRow],
     };
 
     const db = {
@@ -40,7 +40,7 @@ describe('createWatchlistStorage', () => {
       },
     };
 
-    const result = await createWatchlistStorage(db as never).listWatchlist();
+    const result = await createWalletStorage(db as never).listWallets();
 
     expect(recorded.table).toBe('watchlist');
     expect(recorded.where).toEqual([
@@ -53,13 +53,13 @@ describe('createWatchlistStorage', () => {
     ]);
     expect(result).toEqual([
       {
-        ...activeWatchlistRow,
+        ...activeWalletRow,
         score: new Decimal('1.2500'),
       },
     ]);
   });
 
-  it('adds or reactivates a watchlist entry via upsert', async () => {
+  it('adds or reactivates a wallet via upsert', async () => {
     const recorded: {
       conflictColumn?: string;
       table?: string;
@@ -113,7 +113,7 @@ describe('createWatchlistStorage', () => {
         return insertBuilder;
       },
       returningAll: () => insertBuilder,
-      executeTakeFirstOrThrow: async () => activeWatchlistRow,
+      executeTakeFirstOrThrow: async () => activeWalletRow,
     };
 
     const db = {
@@ -123,7 +123,7 @@ describe('createWatchlistStorage', () => {
       },
     };
 
-    const result = await createWatchlistStorage(db as never).addToWatchlist({
+    const result = await createWalletStorage(db as never).addWallet({
       wallet: '0xabc',
       reason: 'high signal trader',
       score: '1.2500',
@@ -146,12 +146,12 @@ describe('createWatchlistStorage', () => {
     });
     expect(recorded.updateSet?.added_at).toBeInstanceOf(Date);
     expect(result).toEqual({
-      ...activeWatchlistRow,
+      ...activeWalletRow,
       score: new Decimal('1.2500'),
     });
   });
 
-  it('soft-removes an active watchlist entry', async () => {
+  it('soft-removes an active wallet', async () => {
     const recorded: {
       set?: {
         active: boolean;
@@ -165,7 +165,7 @@ describe('createWatchlistStorage', () => {
 
     const removedAt = new Date('2026-04-03T12:00:00.000Z');
     const updatedRow = {
-      ...activeWatchlistRow,
+      ...activeWalletRow,
       active: false,
       removed_at: removedAt,
     };
@@ -194,9 +194,7 @@ describe('createWatchlistStorage', () => {
       },
     };
 
-    const result = await createWatchlistStorage(
-      db as never,
-    ).removeFromWatchlist('0xabc');
+    const result = await createWalletStorage(db as never).removeWallet('0xabc');
 
     expect(recorded.table).toBe('watchlist');
     expect(recorded.set?.active).toBe(false);
@@ -224,9 +222,9 @@ describe('createWatchlistStorage', () => {
       updateTable: () => updateBuilder,
     };
 
-    const result = await createWatchlistStorage(
-      db as never,
-    ).removeFromWatchlist('0xmissing');
+    const result = await createWalletStorage(db as never).removeWallet(
+      '0xmissing',
+    );
 
     expect(result).toBeNull();
   });
