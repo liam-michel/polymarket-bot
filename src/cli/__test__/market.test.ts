@@ -10,6 +10,7 @@ import type {
   GammaMarket,
   GammaMarketApiClient,
 } from '~/gamma/market/market.js';
+import { createServices, createTransactionRunner } from '~/services/index.js';
 import type { Storage } from '~/storage/index.js';
 import type { MarketStorage } from '~/storage/market.js';
 
@@ -55,7 +56,15 @@ let app: App;
 describe('markets command', () => {
   beforeEach(() => {
     td.reset();
-    app = initializeApp({ storage, logger, gammaApiClient });
+    const services = createServices(storage, gammaApiClient);
+    const withTransaction = createTransactionRunner(storage, gammaApiClient);
+    app = initializeApp({
+      storage,
+      logger,
+      gammaApiClient,
+      services,
+      withTransaction,
+    });
   });
 
   const configureCommandTree = (command: Command) => {

@@ -7,6 +7,11 @@ import {
   createGammaMarketApiClient,
   GammaMarketApiClient,
 } from './gamma/market/market.js';
+import {
+  createServices,
+  createTransactionRunner,
+  type Services,
+} from './services/index.js';
 import { createStorage, type Storage } from './storage/index.js';
 import { AppConfig, readConfig } from './utils/config.js';
 import { createLogger } from './utils/logger.js';
@@ -31,6 +36,10 @@ type AppState = {
 
 export type AppDependencies = {
   storage: Storage;
+  services: Services;
+  withTransaction: <T>(
+    callback: (services: Services) => Promise<T>,
+  ) => Promise<T>;
   logger: Logger;
   gammaApiClient: GammaMarketApiClient;
 };
@@ -185,8 +194,12 @@ export const initializeAppWithConfig = async ({
   const storage = await createStorage(DATABASE_URL);
   //GAMMA API client
   const gammaApiClient = createGammaMarketApiClient({ logger });
+  const services = createServices(storage, gammaApiClient);
+  const withTransaction = createTransactionRunner(storage, gammaApiClient);
   return initializeApp({
     storage,
+    services,
+    withTransaction,
     logger,
     gammaApiClient,
   });
