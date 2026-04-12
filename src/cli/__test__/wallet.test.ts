@@ -30,7 +30,13 @@ describe('wallet command', () => {
     td.reset();
     const services = createServices(storage, gammaApiClient);
     const withTransaction = createTransactionRunner(storage, gammaApiClient);
-    app = initializeApp({ storage, logger, gammaApiClient, services, withTransaction });
+    app = initializeApp({
+      storage,
+      logger,
+      gammaApiClient,
+      services,
+      withTransaction,
+    });
   });
 
   const configureCommandTree = (command: Command) => {
