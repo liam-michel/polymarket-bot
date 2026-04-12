@@ -5,14 +5,14 @@ import * as td from 'testdouble';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { App, initializeApp } from '~/app.js';
-import { watchlist } from '~/cli/commands/watchlist.js';
+import { wallet } from '~/cli/commands/wallet.js';
 import { GammaMarketApiClient } from '~/gamma/market/market.js';
 import type { Storage } from '~/storage/index.js';
-import type { WatchlistStorage } from '~/storage/watchlist.js';
+import type { WalletStorage } from '~/storage/wallet.js';
 
-type AddWatchlistRequest = Parameters<WatchlistStorage['addToWatchlist']>[0];
+type AddWalletRequest = Parameters<WalletStorage['addWallet']>[0];
 
-const testWatchlistEntry = {
+const testWalletEntry = {
   wallet: '0xabc',
   reason: 'high signal trader',
   score: new Decimal('1.2500'),
@@ -24,7 +24,7 @@ const storage = td.object<Storage>();
 const logger = td.object<Logger>();
 const gammaApiClient = td.object<GammaMarketApiClient>();
 let app: App;
-describe('watchlist command', () => {
+describe('wallet command', () => {
   beforeEach(() => {
     td.reset();
     app = initializeApp({ storage, logger, gammaApiClient });
@@ -45,36 +45,29 @@ describe('watchlist command', () => {
   };
 
   const createCommandUnderTest = () => {
-    return configureCommandTree(watchlist(app));
+    return configureCommandTree(wallet(app));
   };
 
-  it('lists active watchlist entries', async () => {
-    td.when(storage.watchlist.listWatchlist()).thenResolve([
-      testWatchlistEntry,
-    ]);
+  it('lists active watched wallets', async () => {
+    td.when(storage.wallet.listWallets()).thenResolve([testWalletEntry]);
 
     await createCommandUnderTest().parseAsync(['list'], {
       from: 'user',
     });
 
     td.verify(
-      logger.info(
-        { result: [testWatchlistEntry] },
-        'Watchlist listed successfully',
-      ),
+      logger.info({ result: [testWalletEntry] }, 'Wallets listed successfully'),
     );
   });
 
-  it('adds a wallet to the watchlist', async () => {
-    let request: AddWatchlistRequest | undefined;
+  it('adds a watched wallet', async () => {
+    let request: AddWalletRequest | undefined;
 
     td.when(
-      storage.watchlist.addToWatchlist(
-        td.matchers.contains({ wallet: '0xabc' }),
-      ),
-    ).thenDo((input: AddWatchlistRequest) => {
+      storage.wallet.addWallet(td.matchers.contains({ wallet: '0xabc' })),
+    ).thenDo((input: AddWalletRequest) => {
       request = input;
-      return Promise.resolve(testWatchlistEntry);
+      return Promise.resolve(testWalletEntry);
     });
 
     await createCommandUnderTest().parseAsync(
@@ -90,10 +83,7 @@ describe('watchlist command', () => {
       score: '1.25',
     });
     td.verify(
-      logger.info(
-        { result: testWatchlistEntry },
-        'Watchlist entry added successfully',
-      ),
+      logger.info({ result: testWalletEntry }, 'Wallet added successfully'),
     );
   });
 
@@ -168,20 +158,20 @@ describe('watchlist command', () => {
     ).rejects.toThrow('Reason is required');
   });
 
-  it('removes an active watchlist entry', async () => {
+  it('removes an active watched wallet', async () => {
     let requestedWallet: string | undefined;
     const removedEntry = {
-      ...testWatchlistEntry,
+      ...testWalletEntry,
       active: false,
       removed_at: new Date('2026-04-03T12:00:00.000Z'),
     };
 
-    td.when(
-      storage.watchlist.removeFromWatchlist(td.matchers.isA(String)),
-    ).thenDo((wallet: string) => {
-      requestedWallet = wallet;
-      return Promise.resolve(removedEntry);
-    });
+    td.when(storage.wallet.removeWallet(td.matchers.isA(String))).thenDo(
+      (wallet: string) => {
+        requestedWallet = wallet;
+        return Promise.resolve(removedEntry);
+      },
+    );
 
     await createCommandUnderTest().parseAsync(['remove', '0xabc'], {
       from: 'user',
@@ -189,22 +179,17 @@ describe('watchlist command', () => {
 
     expect(requestedWallet).toBe('0xabc');
     td.verify(
-      logger.info(
-        { result: removedEntry },
-        'Watchlist entry removed successfully',
-      ),
+      logger.info({ result: removedEntry }, 'Wallet removed successfully'),
     );
   });
 
   it('fails when removing a wallet that is not active', async () => {
-    td.when(storage.watchlist.removeFromWatchlist('0xmissing')).thenResolve(
-      null,
-    );
+    td.when(storage.wallet.removeWallet('0xmissing')).thenResolve(null);
 
     await expect(
       createCommandUnderTest().parseAsync(['remove', '0xmissing'], {
         from: 'user',
       }),
-    ).rejects.toThrow('Watchlist entry for wallet "0xmissing" was not found');
+    ).rejects.toThrow('Wallet "0xmissing" was not found in the watchlist');
   });
 });

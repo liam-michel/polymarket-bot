@@ -4,12 +4,12 @@ import pg from 'pg';
 
 import { createMarketStorage, type MarketStorage } from './market.js';
 import type { KyselyDB } from './types.js';
-import { createWatchlistStorage, type WatchlistStorage } from './watchlist.js';
+import { createWalletStorage, type WalletStorage } from './wallet.js';
 import * as generated from '~/__generated__/database.js';
 
 export type Storage = {
   market: MarketStorage;
-  watchlist: WatchlistStorage;
+  wallet: WalletStorage;
   transaction: <T>(
     callback: (repo: Readonly<Omit<Storage, 'transaction'>>) => Promise<T>,
   ) => Promise<T>;
@@ -20,7 +20,7 @@ export type Repo = Omit<Storage, 'transaction'>;
 function wrapKyselyDb(db: KyselyDB) {
   return {
     market: createMarketStorage(db),
-    watchlist: createWatchlistStorage(db),
+    wallet: createWalletStorage(db),
   };
 }
 

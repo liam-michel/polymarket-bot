@@ -1,4 +1,5 @@
 import { Models } from './models.js';
+import type { Category } from './models.js';
 import { KyselyDB } from './types.js';
 
 export type MarketStorage = {
@@ -10,7 +11,7 @@ export type MarketStorage = {
 export type CreateMarketInput = {
   condition_id: string;
   question: string;
-  category: string | null;
+  category: Category | null;
   outcome_a: string;
   outcome_b: string;
   status: Models['Market']['status'];

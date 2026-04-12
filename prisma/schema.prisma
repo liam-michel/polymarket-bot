@@ -11,12 +11,30 @@ generator client  {
 datasource db {
   provider = "postgresql"
 }
+
+//  Categories
+enum Category { 
+  Politics
+  Geopolitics
+  GlobalPolitics
+  Crypto
+  Sports
+  Finance
+  Economics
+  Tech
+  Culture
+  Weather
+  Mentions
+  Science
+  Other
+
+}
 // ─── Markets ─────────────────────────────────────────────────────────────────
 
 model Market {
   condition_id  String       @id @map("condition_id")
   question      String
-  category      String?
+  category      Category?
   outcome_a     String       @map("outcome_a")
   outcome_b     String       @map("outcome_b")
   status        MarketStatus @default(ACTIVE)

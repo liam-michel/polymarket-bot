@@ -1,19 +1,19 @@
 import { Models } from './models.js';
 import type { KyselyDB } from './types.js';
 
-export type CreateWatchlistInput = {
+export type CreateWalletInput = {
   wallet: string;
   reason: string;
   score: string;
 };
 
-export type WatchlistStorage = {
-  listWatchlist: () => Promise<Models['Watchlist'][]>;
-  addToWatchlist: (input: CreateWatchlistInput) => Promise<Models['Watchlist']>;
-  removeFromWatchlist: (wallet: string) => Promise<Models['Watchlist'] | null>;
+export type WalletStorage = {
+  listWallets: () => Promise<Models['Watchlist'][]>;
+  addWallet: (input: CreateWalletInput) => Promise<Models['Watchlist']>;
+  removeWallet: (wallet: string) => Promise<Models['Watchlist'] | null>;
 };
 
-function listWatchlist(db: KyselyDB): WatchlistStorage['listWatchlist'] {
+function listWallets(db: KyselyDB): WalletStorage['listWallets'] {
   return async function () {
     const results = await db
       .selectFrom('watchlist')
@@ -28,7 +28,7 @@ function listWatchlist(db: KyselyDB): WatchlistStorage['listWatchlist'] {
   };
 }
 
-function addToWatchlist(db: KyselyDB): WatchlistStorage['addToWatchlist'] {
+function addWallet(db: KyselyDB): WalletStorage['addWallet'] {
   return async function ({ wallet, reason, score }) {
     const result = await db
       .insertInto('watchlist')
@@ -55,9 +55,7 @@ function addToWatchlist(db: KyselyDB): WatchlistStorage['addToWatchlist'] {
   };
 }
 
-function removeFromWatchlist(
-  db: KyselyDB,
-): WatchlistStorage['removeFromWatchlist'] {
+function removeWallet(db: KyselyDB): WalletStorage['removeWallet'] {
   return async function (wallet) {
     const result = await db
       .updateTable('watchlist')
@@ -79,10 +77,10 @@ function removeFromWatchlist(
   };
 }
 
-export function createWatchlistStorage(db: KyselyDB): WatchlistStorage {
+export function createWalletStorage(db: KyselyDB): WalletStorage {
   return {
-    addToWatchlist: addToWatchlist(db),
-    listWatchlist: listWatchlist(db),
-    removeFromWatchlist: removeFromWatchlist(db),
+    addWallet: addWallet(db),
+    listWallets: listWallets(db),
+    removeWallet: removeWallet(db),
   };
 }

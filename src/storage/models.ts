@@ -9,10 +9,12 @@ const SignalType = z.enum(generated.SignalType);
 
 const decimal = z.string().transform((val) => new Decimal(val));
 
+const Category = z.enum(generated.Category);
+
 const Market = z.object({
   condition_id: z.string(),
   question: z.string(),
-  category: z.string().nullable(),
+  category: Category.nullable(),
   outcome_a: z.string(),
   outcome_b: z.string(),
   status: MarketStatus,
@@ -118,6 +120,7 @@ const IngestionCursor = z.object({
   updated_at: z.date(),
 });
 
+export type Category = z.infer<typeof Category>;
 export type Market = z.infer<typeof Market>;
 export type Trade = z.infer<typeof Trade>;
 export type Position = z.infer<typeof Position>;
@@ -128,6 +131,7 @@ export type Signal = z.infer<typeof Signal>;
 export type IngestionCursor = z.infer<typeof IngestionCursor>;
 
 export const Models = {
+  Category,
   Market,
   Trade,
   Position,

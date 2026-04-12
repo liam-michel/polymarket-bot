@@ -18,7 +18,7 @@ type UpsertMarketRequest = Parameters<MarketStorage['upsertMarket']>[0];
 const testMarket = {
   condition_id: 'condition-123',
   question: 'Will this command work?',
-  category: 'testing',
+  category: 'Politics' as const,
   outcome_a: 'Yes',
   outcome_b: 'No',
   status: 'ACTIVE' as const,
@@ -33,12 +33,20 @@ const testGammaMarket: GammaMarket = {
   id: 'gamma-market-123',
   conditionId: 'condition-123',
   question: 'Will this command work?',
+  category: 'Politics',
   description: null,
   outcomes: '["Yes","No"]',
   endDate: '2026-04-10T12:00:00.000Z',
   volume: '1234.56',
   active: true,
   closed: false,
+};
+const testResolvedGammaMarket = {
+  id: 'gamma-resolved-123',
+  question: 'Did this resolve?',
+  category: 'Politics' as const,
+  description: null,
+  closed: true,
 };
 const storage = td.object<Storage>();
 const logger = td.object<Logger>();
@@ -176,5 +184,105 @@ describe('markets command', () => {
     ).rejects.toMatchObject({
       code: 'commander.missingArgument',
     });
+  });
+
+  it('lists markets from storage', async () => {
+    td.when(storage.market.listMarkets()).thenResolve([testMarket]);
+
+    await createCommandUnderTest().parseAsync(['list-markets'], {
+      from: 'user',
+    });
+
+    td.verify(
+      logger.info({ result: [testMarket] }, 'Markets listed successfully'),
+    );
+  });
+
+  it('lists resolved markets from the Gamma API', async () => {
+    let requestedArgs:
+      | { count: number; offset: number; asc: boolean }
+      | undefined;
+
+    td.when(
+      gammaApiClient.scrapeResolvedMarkets(td.matchers.anything()),
+    ).thenDo((args: { count: number; offset: number; asc: boolean }) => {
+      requestedArgs = args;
+      return Promise.resolve([testResolvedGammaMarket]);
+    });
+
+    await createCommandUnderTest().parseAsync(
+      ['list-resolved-markets', '--count', '5', '--offset', '10'],
+      { from: 'user' },
+    );
+
+    expect(requestedArgs).toEqual({ count: 5, offset: 10, asc: false });
+    td.verify(
+      logger.info(
+        { result: [testResolvedGammaMarket] },
+        'Resolved markets listed successfully',
+      ),
+    );
+  });
+
+  it('lists markets by category from the Gamma API', async () => {
+    let requestedArgs:
+      | { category: string; count: number; offset: number; asc: boolean }
+      | undefined;
+
+    td.when(gammaApiClient.getMarketsByCategory(td.matchers.anything())).thenDo(
+      (args: {
+        category: string;
+        count: number;
+        offset: number;
+        asc: boolean;
+      }) => {
+        requestedArgs = args;
+        return Promise.resolve([testGammaMarket]);
+      },
+    );
+
+    await createCommandUnderTest().parseAsync(
+      [
+        'list-markets-by-category',
+        'Politics',
+        '--count',
+        '20',
+        '--offset',
+        '5',
+      ],
+      { from: 'user' },
+    );
+
+    expect(requestedArgs).toEqual({
+      category: 'Politics',
+      count: 20,
+      offset: 5,
+      asc: false,
+    });
+    td.verify(
+      logger.info(
+        { result: [testGammaMarket] },
+        'Markets by category listed successfully',
+      ),
+    );
+  });
+
+  it('requires a category argument for list-markets-by-category', async () => {
+    await expect(
+      createCommandUnderTest().parseAsync(['list-markets-by-category'], {
+        from: 'user',
+      }),
+    ).rejects.toMatchObject({
+      code: 'commander.missingArgument',
+    });
+  });
+
+  it('rejects an invalid category for list-markets-by-category', async () => {
+    await expect(
+      createCommandUnderTest().parseAsync(
+        ['list-markets-by-category', 'NotARealCategory'],
+        { from: 'user' },
+      ),
+    ).rejects.toThrow();
   });
 });
