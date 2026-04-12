@@ -59,9 +59,7 @@ const listMarketsByCategory = (app: App) =>
         .argParser(Number),
     )
     .addOption(
-      createOption('--asc <boolean>', 'Sort markets in ascending order')
-        .default(false)
-        .argParser(Boolean),
+      createOption('--asc', 'Sort markets in ascending order').default(false),
     )
     .action(async (category, opts) => {
       const parsedArgs = listMarketsByCategorySchema.parse({
@@ -102,9 +100,7 @@ const listResolvedMarkets = (app: App) =>
         .argParser(Number),
     )
     .addOption(
-      createOption('--asc <boolean>', 'Sort markets in ascending order')
-        .default(false)
-        .argParser(Boolean),
+      createOption('--asc', 'Sort markets in ascending order').default(false),
     )
 
     .action(async (opts) => {
