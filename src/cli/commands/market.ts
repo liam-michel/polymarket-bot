@@ -2,8 +2,6 @@ import { createCommand, createOption } from 'commander';
 import { z } from 'zod';
 
 import { App, instruction } from '~/app.js';
-import type { GammaMarket } from '~/gamma/market/market.js';
-import type { CreateMarketInput } from '~/storage/market.js';
 import { Models } from '~/storage/models.js';
 
 const listMarketSchema = z.object({
@@ -15,34 +13,6 @@ const listMarketSchema = z.object({
 const listMarketsByCategorySchema = listMarketSchema.extend({
   category: Models.Category,
 });
-const marketOutcomesSchema = z.tuple([z.string(), z.string()]);
-
-function parseMarketOutcomes(outcomes: string) {
-  const parsedJson = JSON.parse(outcomes);
-  const parsedOutcomes = marketOutcomesSchema.parse(parsedJson);
-
-  return {
-    outcome_a: parsedOutcomes[0],
-    outcome_b: parsedOutcomes[1],
-  };
-}
-
-function mapGammaMarketToCreateMarketInput(market: GammaMarket) {
-  const { outcome_a, outcome_b } = parseMarketOutcomes(market.outcomes);
-
-  return {
-    condition_id: market.conditionId,
-    question: market.question,
-    category: null,
-    outcome_a,
-    outcome_b,
-    status: market.closed ? 'CLOSED' : market.active ? 'ACTIVE' : 'CLOSED',
-    outcome: null,
-    closes_at: new Date(market.endDate),
-    resolved_at: null,
-    volume_usd: market.volume,
-  } satisfies CreateMarketInput;
-}
 
 const listMarketsByCategory = (app: App) =>
   createCommand('list-markets-by-category')
@@ -139,20 +109,8 @@ const importMarket = (app: App) =>
     .argument('<conditionId>', 'Market condition ID')
     .action(async (conditionId: string) => {
       const result = await app
-        .execute(({ gammaApiClient, storage }) =>
-          instruction(async () => {
-            const market = await gammaApiClient.getMarketById(conditionId);
-
-            if (!market) {
-              throw new Error(
-                `Market with condition ID "${conditionId}" was not found in Gamma`,
-              );
-            }
-
-            return storage.market.upsertMarket(
-              mapGammaMarketToCreateMarketInput(market),
-            );
-          }),
+        .execute(({ services }) =>
+          instruction(() => services.market.importMarket(conditionId)),
         )
         .once();
 
