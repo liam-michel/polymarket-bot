@@ -23,17 +23,42 @@ export type GammaMarketApiClient = {
   }) => Promise<GammaMarket[]>;
 };
 
+const outcomesSchema = z.string().transform((s, ctx) => {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(s);
+  } catch {
+    ctx.addIssue({ code: 'custom', message: 'outcomes is not valid JSON' });
+    return z.NEVER;
+  }
+  const isValid =
+    Array.isArray(parsed) &&
+    parsed.length === 2 &&
+    ((parsed[0] === 'Yes' && parsed[1] === 'No') ||
+      (parsed[0] === 'True' && parsed[1] === 'False'));
+  if (!isValid) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'outcomes must be ["Yes","No"] or ["True","False"]',
+    });
+    return z.NEVER;
+  }
+  return parsed as ['Yes', 'No'] | ['True', 'False'];
+});
+
+export type Outcomes = z.infer<typeof outcomesSchema>;
+
 const ResolvedMarketApiSchema = z.object({
   id: z.string(),
   question: z.string(),
-  category: Models.Category,
+  category: Models.Category.nullable().catch(null),
   description: z.string().nullable(),
   closed: z.boolean(),
 });
 
 const MarketApiSchema = ResolvedMarketApiSchema.extend({
   conditionId: z.string(),
-  outcomes: z.string(),
+  outcomes: outcomesSchema,
   endDate: z.string(),
   volume: z.string(),
   active: z.boolean(),

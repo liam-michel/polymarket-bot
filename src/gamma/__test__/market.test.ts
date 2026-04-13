@@ -125,7 +125,7 @@ describe('getMarketById', () => {
       category: 'Weather',
       description: null,
       conditionId: 'condition-123',
-      outcomes: '["Yes","No"]',
+      outcomes: ['Yes', 'No'],
       endDate: '2026-04-10T12:00:00.000Z',
       volume: '1234.56',
       active: true,

@@ -36,7 +36,7 @@ const testGammaMarket: GammaMarket = {
   question: 'Will this command work?',
   category: 'Politics',
   description: null,
-  outcomes: '["Yes","No"]',
+  outcomes: ['Yes', 'No'] as ['Yes', 'No'],
   endDate: '2026-04-10T12:00:00.000Z',
   volume: '1234.56',
   active: true,
@@ -173,24 +173,15 @@ describe('markets command', () => {
     );
   });
   it('should throw when a malformed market is returned from Gamma', async () => {
-    td.when(gammaApiClient.getMarketById(td.matchers.isA(String))).thenResolve({
-      id: 1,
-      conditionId: 'condition-123',
-      question: 'Will this command work?',
-      category: 'Politics',
-      description: null,
-      outcomes: 'not-a-valid-json',
-      endDate: '2026-04-10T12:00:00.000Z',
-      volume: '1234.56',
-      active: true,
-      closed: false,
-    } as unknown as any);
+    td.when(gammaApiClient.getMarketById(td.matchers.isA(String))).thenReject(
+      new Error('Invalid response'),
+    );
 
     await expect(
       createCommandUnderTest().parseAsync(['import', 'condition-123'], {
         from: 'user',
       }),
-    ).rejects.toThrow('Unexpected token');
+    ).rejects.toThrow('Invalid response');
   });
 
   it('fails when Gamma does not return the market to import', async () => {
