@@ -21,7 +21,7 @@ function mapGammaMarketToCreateMarketInput(
     category: null,
     outcome_a: outcomes[0],
     outcome_b: outcomes[1],
-    status: market.closed ? 'CLOSED' : market.active ? 'ACTIVE' : 'CLOSED',
+    status: market.active && !market.closed ? 'ACTIVE' : 'CLOSED',
     outcome: null,
     closes_at: new Date(market.endDate),
     resolved_at: null,
