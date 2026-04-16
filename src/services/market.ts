@@ -1,7 +1,5 @@
-import type {
-  GammaMarket,
-  GammaMarketApiClient,
-} from '~/gamma/market/index.js';
+import type { GammaMarketApiClient } from '~/gamma/market/index.js';
+import type { GammaMarket } from '~/gamma/market/schemas.js';
 import type { Repo } from '~/storage/index.js';
 import type { CreateMarketInput } from '~/storage/market.js';
 import type { Models } from '~/storage/models.js';
@@ -37,7 +35,7 @@ function importMarket(
   gammaApiClient: GammaMarketApiClient,
 ): MarketService['importMarket'] {
   return async function (conditionId) {
-    const market = await gammaApiClient.getMarketById(conditionId);
+    const market = await gammaApiClient.getMarketById({ conditionId });
 
     if (!market) {
       throw new Error(

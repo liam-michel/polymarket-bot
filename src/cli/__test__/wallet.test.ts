@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { App, initializeApp } from '~/app.js';
 import { wallet } from '~/cli/commands/wallet.js';
+import { DataApiClient } from '~/data-api/index.js';
 import { GammaMarketApiClient } from '~/gamma/market/index.js';
 import { createServices, createTransactionRunner } from '~/services/index.js';
 import type { Storage } from '~/storage/index.js';
@@ -24,16 +25,26 @@ const testWalletEntry = {
 const storage = td.object<Storage>();
 const logger = td.object<Logger>();
 const gammaApiClient = td.object<GammaMarketApiClient>();
+const dataApiClient = td.object<DataApiClient>();
 let app: App;
 describe('wallet command', () => {
   beforeEach(() => {
     td.reset();
-    const services = createServices({ repo: storage, gammaApiClient });
-    const withTransaction = createTransactionRunner(storage, gammaApiClient);
+    const services = createServices({
+      repo: storage,
+      gammaApiClient,
+      dataApiClient,
+    });
+    const withTransaction = createTransactionRunner({
+      storage,
+      gammaApiClient,
+      dataApiClient,
+    });
     app = initializeApp({
       storage,
       logger,
       gammaApiClient,
+      dataApiClient,
       services,
       withTransaction,
     });

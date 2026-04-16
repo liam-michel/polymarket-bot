@@ -29,14 +29,17 @@ const validLeaderboardEntry = {
 const validTrade = {
   proxyWallet: '0xe7e0257fa4f76989fb6670bcd53a1b05b800a433',
   side: 'BUY',
-  asset: '49381942807896411152538542774068503989550475264282514759941760458040201330791',
-  conditionId: '0xa948cba5f5f97ed0cd8732b66244cdebe834f896611ddfc04414ffcc9b226861',
+  asset:
+    '49381942807896411152538542774068503989550475264282514759941760458040201330791',
+  conditionId:
+    '0xa948cba5f5f97ed0cd8732b66244cdebe834f896611ddfc04414ffcc9b226861',
   size: 164.6051,
   price: 0.7,
   timestamp: 1776335160,
   outcome: 'Tatjana Maria',
   outcomeIndex: 1,
-  transactionHash: '0x3ae97d4f0473d6027a7f86486b0e438222ab6a794ff69e6e1d9881a6b159dfde',
+  transactionHash:
+    '0x3ae97d4f0473d6027a7f86486b0e438222ab6a794ff69e6e1d9881a6b159dfde',
 };
 
 describe('getLeaderboard', () => {
@@ -63,7 +66,10 @@ describe('getLeaderboard', () => {
     );
     expect(entries).toEqual([validLeaderboardEntry]);
     td.verify(
-      logger.error(td.matchers.anything(), 'Failed to fetch leaderboard entries'),
+      logger.error(
+        td.matchers.anything(),
+        'Failed to fetch leaderboard entries',
+      ),
       { times: 0 },
     );
   });
@@ -80,7 +86,10 @@ describe('getLeaderboard', () => {
       dataApiClient.getLeaderboard({ limit: 25, offset: 0 }),
     ).rejects.toThrow('Failed to fetch leaderboard entries');
     td.verify(
-      logger.error({ response: mockResponse }, 'Failed to fetch leaderboard entries'),
+      logger.error(
+        { response: mockResponse },
+        'Failed to fetch leaderboard entries',
+      ),
       { times: 1 },
     );
   });
@@ -89,14 +98,18 @@ describe('getLeaderboard', () => {
     const mockResponse = {
       ok: true,
       status: 200,
-      json: async () => [{ ...validLeaderboardEntry, proxyWallet: 'not-an-address' }],
+      json: async () => [
+        { ...validLeaderboardEntry, proxyWallet: 'not-an-address' },
+      ],
     } as Response;
     td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
 
     await expect(
       dataApiClient.getLeaderboard({ limit: 25, offset: 0 }),
     ).rejects.toThrow('Invalid response');
-    td.verify(logger.error(td.matchers.anything(), 'Invalid response'), { times: 1 });
+    td.verify(logger.error(td.matchers.anything(), 'Invalid response'), {
+      times: 1,
+    });
   });
 
   it('should reject entries with non-numeric rank', async () => {
@@ -110,7 +123,9 @@ describe('getLeaderboard', () => {
     await expect(
       dataApiClient.getLeaderboard({ limit: 25, offset: 0 }),
     ).rejects.toThrow('Invalid response');
-    td.verify(logger.error(td.matchers.anything(), 'Invalid response'), { times: 1 });
+    td.verify(logger.error(td.matchers.anything(), 'Invalid response'), {
+      times: 1,
+    });
   });
 });
 
@@ -132,10 +147,9 @@ describe('getTrades', () => {
       { times: 1 },
     );
     expect(trades).toEqual([validTrade]);
-    td.verify(
-      logger.error(td.matchers.anything(), 'Failed to fetch trades'),
-      { times: 0 },
-    );
+    td.verify(logger.error(td.matchers.anything(), 'Failed to fetch trades'), {
+      times: 0,
+    });
   });
 
   it('should include user param when provided', async () => {
@@ -213,7 +227,9 @@ describe('getTrades', () => {
     await expect(
       dataApiClient.getTrades({ limit: 100, offset: 0 }),
     ).rejects.toThrow('Invalid response');
-    td.verify(logger.error(td.matchers.anything(), 'Invalid response'), { times: 1 });
+    td.verify(logger.error(td.matchers.anything(), 'Invalid response'), {
+      times: 1,
+    });
   });
 
   it('should reject trades with invalid side', async () => {
@@ -227,6 +243,8 @@ describe('getTrades', () => {
     await expect(
       dataApiClient.getTrades({ limit: 100, offset: 0 }),
     ).rejects.toThrow('Invalid response');
-    td.verify(logger.error(td.matchers.anything(), 'Invalid response'), { times: 1 });
+    td.verify(logger.error(td.matchers.anything(), 'Invalid response'), {
+      times: 1,
+    });
   });
 });

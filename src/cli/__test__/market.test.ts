@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { App, initializeApp } from '~/app.js';
 import { markets } from '~/cli/commands/market.js';
+import { DataApiClient } from '~/data-api/index.js';
 import type { GammaMarketApiClient } from '~/gamma/market/index.js';
 import type { GammaMarket } from '~/gamma/market/schemas.js';
 import { createServices, createTransactionRunner } from '~/services/index.js';
@@ -51,16 +52,26 @@ const testResolvedGammaMarket = {
 const storage = td.object<Storage>();
 const logger = td.object<Logger>();
 const gammaApiClient = td.object<GammaMarketApiClient>();
+const dataApiClient = td.object<DataApiClient>();
 let app: App;
 describe('markets command', () => {
   beforeEach(() => {
     td.reset();
-    const services = createServices({ repo: storage, gammaApiClient });
-    const withTransaction = createTransactionRunner(storage, gammaApiClient);
+    const services = createServices({
+      repo: storage,
+      gammaApiClient,
+      dataApiClient,
+    });
+    const withTransaction = createTransactionRunner({
+      storage,
+      gammaApiClient,
+      dataApiClient,
+    });
     app = initializeApp({
       storage,
       logger,
       gammaApiClient,
+      dataApiClient,
       services,
       withTransaction,
     });
@@ -137,9 +148,9 @@ describe('markets command', () => {
     let requestedConditionId: string | undefined;
     let request: UpsertMarketRequest | undefined;
 
-    td.when(gammaApiClient.getMarketById(td.matchers.isA(String))).thenDo(
-      (conditionId: string) => {
-        requestedConditionId = conditionId;
+    td.when(gammaApiClient.getMarketById(td.matchers.anything())).thenDo(
+      (data: { conditionId: string }) => {
+        requestedConditionId = data.conditionId;
         return Promise.resolve(testGammaMarket);
       },
     );
@@ -173,7 +184,7 @@ describe('markets command', () => {
   });
 
   it('should propagate errors thrown by the Gamma API client', async () => {
-    td.when(gammaApiClient.getMarketById(td.matchers.isA(String))).thenReject(
+    td.when(gammaApiClient.getMarketById(td.matchers.anything())).thenReject(
       new Error('Invalid response'),
     );
 

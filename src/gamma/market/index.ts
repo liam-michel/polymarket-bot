@@ -1,11 +1,12 @@
 import { Logger } from 'pino';
+
+import { handleResponse } from '../../utils/api.js';
 import {
   MarketApiSchema,
   ResolvedMarketApiSchema,
   ResolvedGammaMarket,
   GammaMarket,
 } from './schemas.js';
-import { handleResponse } from '../../utils/api.js';
 import { Models } from '~/storage/models.js';
 
 type Dependencies = {

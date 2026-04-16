@@ -3,6 +3,7 @@ import type { Logger } from 'pino';
 import * as _ from 'radashi';
 import { v6 as randomUUID } from 'uuid';
 
+import { createDataApiClient } from './data-api/index.js';
 import {
   createGammaMarketApiClient,
   GammaMarketApiClient,
@@ -42,6 +43,7 @@ export type AppDependencies = {
   ) => Promise<T>;
   logger: Logger;
   gammaApiClient: GammaMarketApiClient;
+  dataApiClient: ReturnType<typeof createDataApiClient>;
 };
 
 export type AppInstruction<TOutput> = (
@@ -194,14 +196,25 @@ export const initializeAppWithConfig = async ({
   const storage = await createStorage(DATABASE_URL);
   //GAMMA API client
   const gammaApiClient = createGammaMarketApiClient({ logger });
-  const services = createServices({ repo: storage, gammaApiClient });
-  const withTransaction = createTransactionRunner(storage, gammaApiClient);
+  const dataApiClient = createDataApiClient({ logger });
+
+  const services = createServices({
+    repo: storage,
+    gammaApiClient,
+    dataApiClient,
+  });
+  const withTransaction = createTransactionRunner({
+    storage,
+    gammaApiClient,
+    dataApiClient,
+  });
   return initializeApp({
     storage,
     services,
     withTransaction,
     logger,
     gammaApiClient,
+    dataApiClient,
   });
 };
 

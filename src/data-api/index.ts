@@ -1,6 +1,5 @@
 import type { Logger } from 'pino';
 
-import { handleResponse } from '~/utils/api.js';
 import {
   DataApiTrade,
   DataApiTradeSchema,
@@ -10,6 +9,7 @@ import {
   TimePeriod,
 } from './schemas.js';
 import { Models } from '~/storage/models.js';
+import { handleResponse } from '~/utils/api.js';
 
 type Dependencies = {
   logger: Logger;

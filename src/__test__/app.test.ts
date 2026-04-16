@@ -9,6 +9,7 @@ import {
   initializeApp,
   instruction as instructionFactory,
 } from '~/app.js';
+import { DataApiClient } from '~/data-api/index.js';
 import { GammaMarketApiClient } from '~/gamma/market/index.js';
 import { createServices, createTransactionRunner } from '~/services/index.js';
 import type { Storage } from '~/storage/index.js';
@@ -16,18 +17,28 @@ import type { Storage } from '~/storage/index.js';
 const storage = td.object<Storage>();
 const logger = td.object<Logger>();
 const gammaApiClient = td.object<GammaMarketApiClient>();
+const dataApiClient = td.object<DataApiClient>();
 
 let app: App;
 let instruction: AppInstruction<string>;
 
 beforeEach(() => {
   td.reset();
-  const services = createServices({ repo: storage, gammaApiClient });
-  const withTransaction = createTransactionRunner(storage, gammaApiClient);
+  const services = createServices({
+    repo: storage,
+    gammaApiClient,
+    dataApiClient,
+  });
+  const withTransaction = createTransactionRunner({
+    storage,
+    gammaApiClient,
+    dataApiClient,
+  });
   app = initializeApp({
     storage,
     logger,
     gammaApiClient,
+    dataApiClient,
     services,
     withTransaction,
   });
