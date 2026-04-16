@@ -48,6 +48,8 @@ export type Market = {
     category: Category | null;
     outcome_a: string;
     outcome_b: string;
+    token_a_id: string | null;
+    token_b_id: string | null;
     status: Generated<MarketStatus>;
     outcome: number | null;
     closes_at: Timestamp;

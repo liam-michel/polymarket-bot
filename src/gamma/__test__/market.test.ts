@@ -3,7 +3,7 @@ import type { Logger } from 'pino';
 import * as td from 'testdouble';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-import { createGammaMarketApiClient } from '~/gamma/market/market.js';
+import { createGammaMarketApiClient } from '~/gamma/market/index.js';
 
 const logger = td.object<Logger>();
 let gammaApiClient: ReturnType<typeof createGammaMarketApiClient>;
@@ -129,6 +129,7 @@ describe('getMarketById', () => {
           description: null,
           conditionId: 'condition-123',
           outcomes: '["Yes","No"]',
+          clobTokenIds: '["111","222"]',
           endDate: '2026-04-10T12:00:00.000Z',
           volume: '1234.56',
           active: true,
@@ -138,7 +139,9 @@ describe('getMarketById', () => {
     } as Response;
     td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
 
-    const market = await gammaApiClient.getMarketById('condition-123');
+    const market = await gammaApiClient.getMarketById({
+      conditionId: 'condition-123',
+    });
 
     td.verify(
       global.fetch(
@@ -153,6 +156,7 @@ describe('getMarketById', () => {
       description: null,
       conditionId: 'condition-123',
       outcomes: ['Yes', 'No'],
+      clobTokenIds: ['111', '222'],
       endDate: '2026-04-10T12:00:00.000Z',
       volume: '1234.56',
       active: true,
@@ -176,7 +180,9 @@ describe('getMarketById', () => {
     td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
 
     await expect(
-      gammaApiClient.getMarketById('condition-123'),
+      gammaApiClient.getMarketById({
+        conditionId: 'condition-123',
+      }),
     ).resolves.toBeNull();
   });
 
@@ -188,9 +194,11 @@ describe('getMarketById', () => {
     } as Response;
     td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
 
-    await expect(gammaApiClient.getMarketById('condition-123')).rejects.toThrow(
-      'Failed to fetch market by condition ID',
-    );
+    await expect(
+      gammaApiClient.getMarketById({
+        conditionId: 'condition-123',
+      }),
+    ).rejects.toThrow('Failed to fetch market by condition ID');
     td.verify(
       logger.error(
         {
@@ -222,9 +230,11 @@ describe('getMarketById', () => {
     } as Response;
     td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
 
-    await expect(gammaApiClient.getMarketById('condition-123')).rejects.toThrow(
-      'Invalid response',
-    );
+    await expect(
+      gammaApiClient.getMarketById({
+        conditionId: 'condition-123',
+      }),
+    ).rejects.toThrow('Invalid response');
     td.verify(logger.error(td.matchers.anything(), 'Invalid response'), {
       times: 1,
     });
@@ -243,6 +253,7 @@ describe('getMarketsByCategory', () => {
           description: null,
           conditionId: 'condition-123',
           outcomes: '["Yes","No"]',
+          clobTokenIds: '["111","222"]',
           endDate: '2026-04-10T12:00:00.000Z',
           volume: '1234.56',
           active: true,
@@ -273,6 +284,7 @@ describe('getMarketsByCategory', () => {
         description: null,
         conditionId: 'condition-123',
         outcomes: ['Yes', 'No'],
+        clobTokenIds: ['111', '222'],
         endDate: '2026-04-10T12:00:00.000Z',
         volume: '1234.56',
         active: true,

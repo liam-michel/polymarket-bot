@@ -6,10 +6,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { App, initializeApp } from '~/app.js';
 import { markets } from '~/cli/commands/market.js';
-import type {
-  GammaMarket,
-  GammaMarketApiClient,
-} from '~/gamma/market/market.js';
+import type { GammaMarketApiClient } from '~/gamma/market/index.js';
+import type { GammaMarket } from '~/gamma/market/schemas.js';
 import { createServices, createTransactionRunner } from '~/services/index.js';
 import type { Storage } from '~/storage/index.js';
 import type { MarketStorage } from '~/storage/market.js';
@@ -34,6 +32,7 @@ const testGammaMarket: GammaMarket = {
   id: 'gamma-market-123',
   conditionId: 'condition-123',
   question: 'Will this command work?',
+  clobTokenIds: ['tokenA', 'tokenB'],
   category: 'Politics',
   description: null,
   outcomes: ['Yes', 'No'] as ['Yes', 'No'],
@@ -186,7 +185,11 @@ describe('markets command', () => {
   });
 
   it('fails when Gamma does not return the market to import', async () => {
-    td.when(gammaApiClient.getMarketById('missing-market')).thenResolve(null);
+    td.when(
+      gammaApiClient.getMarketById({
+        conditionId: 'missing-market',
+      }),
+    ).thenResolve(null);
 
     await expect(
       createCommandUnderTest().parseAsync(['import', 'missing-market'], {

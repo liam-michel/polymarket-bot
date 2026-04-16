@@ -1,7 +1,11 @@
 import { Logger } from 'pino';
-import { z } from 'zod';
-
-import { handleResponse } from '../api.js';
+import {
+  MarketApiSchema,
+  ResolvedMarketApiSchema,
+  ResolvedGammaMarket,
+  GammaMarket,
+} from './schemas.js';
+import { handleResponse } from '../../utils/api.js';
 import { Models } from '~/storage/models.js';
 
 type Dependencies = {
@@ -9,7 +13,7 @@ type Dependencies = {
 };
 
 export type GammaMarketApiClient = {
-  getMarketById: (conditionId: string) => Promise<GammaMarket | null>;
+  getMarketById: (data: { conditionId: string }) => Promise<GammaMarket | null>;
   scrapeResolvedMarkets: (data: {
     count: number;
     offset: number;
@@ -23,47 +27,11 @@ export type GammaMarketApiClient = {
   }) => Promise<GammaMarket[]>;
 };
 
-const outcomesSchema = z
-  .string()
-  .transform((s, ctx) => {
-    try {
-      return JSON.parse(s);
-    } catch {
-      ctx.addIssue({ code: 'custom', message: 'outcomes is not valid JSON' });
-      return z.NEVER;
-    }
-  })
-  .pipe(
-    z.union([
-      z.tuple([z.literal('Yes'), z.literal('No')]),
-      z.tuple([z.literal('True'), z.literal('False')]),
-    ]),
-  );
-export type Outcomes = z.infer<typeof outcomesSchema>;
-
-const ResolvedMarketApiSchema = z.object({
-  id: z.string(),
-  question: z.string(),
-  category: Models.Category.nullish().transform((category) => category ?? null),
-  description: z.string().nullable(),
-  closed: z.boolean(),
-});
-
-const MarketApiSchema = ResolvedMarketApiSchema.extend({
-  conditionId: z.string(),
-  outcomes: outcomesSchema,
-  endDate: z.string(),
-  volume: z.string(),
-  active: z.boolean(),
-});
-
-export type ResolvedGammaMarket = z.infer<typeof ResolvedMarketApiSchema>;
-export type GammaMarket = z.infer<typeof MarketApiSchema>;
-
 function getMarketById(
   deps: Dependencies,
 ): GammaMarketApiClient['getMarketById'] {
-  return async function (conditionId) {
+  return async function (data) {
+    const { conditionId } = data;
     const { logger } = deps;
     const response = await fetch(
       `https://gamma-api.polymarket.com/markets?condition_ids=${conditionId}`,

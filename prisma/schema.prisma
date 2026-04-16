@@ -37,6 +37,8 @@ model Market {
   category      Category?
   outcome_a     String       @map("outcome_a")
   outcome_b     String       @map("outcome_b")
+  token_a_id   String?      @map("token_a_id")
+  token_b_id   String?      @map("token_b_id")
   status        MarketStatus @default(ACTIVE)
   outcome       Int?
   closes_at     DateTime     @map("closes_at")

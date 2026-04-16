@@ -6,7 +6,7 @@ import { v6 as randomUUID } from 'uuid';
 import {
   createGammaMarketApiClient,
   GammaMarketApiClient,
-} from './gamma/market/market.js';
+} from './gamma/market/index.js';
 import {
   createServices,
   createTransactionRunner,

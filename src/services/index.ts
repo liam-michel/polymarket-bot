@@ -1,5 +1,5 @@
 import { createMarketService, type MarketService } from './market.js';
-import type { GammaMarketApiClient } from '~/gamma/market/market.js';
+import type { GammaMarketApiClient } from '~/gamma/market/index.js';
 import type { Repo, Storage } from '~/storage/index.js';
 
 export type Services = {

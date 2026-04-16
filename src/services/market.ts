@@ -1,7 +1,7 @@
 import type {
   GammaMarket,
   GammaMarketApiClient,
-} from '~/gamma/market/market.js';
+} from '~/gamma/market/index.js';
 import type { Repo } from '~/storage/index.js';
 import type { CreateMarketInput } from '~/storage/market.js';
 import type { Models } from '~/storage/models.js';

@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { App, initializeApp } from '~/app.js';
 import { wallet } from '~/cli/commands/wallet.js';
-import { GammaMarketApiClient } from '~/gamma/market/market.js';
+import { GammaMarketApiClient } from '~/gamma/market/index.js';
 import { createServices, createTransactionRunner } from '~/services/index.js';
 import type { Storage } from '~/storage/index.js';
 import type { WalletStorage } from '~/storage/wallet.js';

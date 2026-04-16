@@ -9,7 +9,7 @@ import {
   initializeApp,
   instruction as instructionFactory,
 } from '~/app.js';
-import { GammaMarketApiClient } from '~/gamma/market/market.js';
+import { GammaMarketApiClient } from '~/gamma/market/index.js';
 import { createServices, createTransactionRunner } from '~/services/index.js';
 import type { Storage } from '~/storage/index.js';
 
