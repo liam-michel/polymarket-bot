@@ -36,7 +36,7 @@ const testGammaMarket: GammaMarket = {
   question: 'Will this command work?',
   category: 'Politics',
   description: null,
-  outcomes: '["Yes","No"]',
+  outcomes: ['Yes', 'No'] as ['Yes', 'No'],
   endDate: '2026-04-10T12:00:00.000Z',
   volume: '1234.56',
   active: true,
@@ -56,7 +56,7 @@ let app: App;
 describe('markets command', () => {
   beforeEach(() => {
     td.reset();
-    const services = createServices(storage, gammaApiClient);
+    const services = createServices({ repo: storage, gammaApiClient });
     const withTransaction = createTransactionRunner(storage, gammaApiClient);
     app = initializeApp({
       storage,
@@ -172,25 +172,17 @@ describe('markets command', () => {
       logger.info({ result: testMarket }, 'Market imported successfully'),
     );
   });
-  it('should throw when a malformed market is returned from Gamma', async () => {
-    td.when(gammaApiClient.getMarketById(td.matchers.isA(String))).thenResolve({
-      id: 1,
-      conditionId: 'condition-123',
-      question: 'Will this command work?',
-      category: 'Politics',
-      description: null,
-      outcomes: 'not-a-valid-json',
-      endDate: '2026-04-10T12:00:00.000Z',
-      volume: '1234.56',
-      active: true,
-      closed: false,
-    } as unknown as any);
+
+  it('should propagate errors thrown by the Gamma API client', async () => {
+    td.when(gammaApiClient.getMarketById(td.matchers.isA(String))).thenReject(
+      new Error('Invalid response'),
+    );
 
     await expect(
       createCommandUnderTest().parseAsync(['import', 'condition-123'], {
         from: 'user',
       }),
-    ).rejects.toThrow('Unexpected token');
+    ).rejects.toThrow('Invalid response');
   });
 
   it('fails when Gamma does not return the market to import', async () => {

@@ -87,6 +87,33 @@ describe('scrapeResolvedMarkets', () => {
       { times: 1 },
     );
   });
+  it('should reject markets with invalid categories', async () => {
+    const mockResponse = {
+      ok: true,
+      status: 200,
+      json: async () => [
+        {
+          id: '1',
+          question: 'Will it rain tomorrow?',
+          category: 'not a valid category',
+          description: null,
+          closed: true,
+        },
+      ],
+    } as Response;
+    td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
+
+    await expect(
+      gammaApiClient.scrapeResolvedMarkets({
+        count: 1,
+        offset: 0,
+        asc: true,
+      }),
+    ).rejects.toThrow('Invalid response');
+    td.verify(logger.error(td.matchers.anything(), 'Invalid response'), {
+      times: 1,
+    });
+  });
 });
 
 describe('getMarketById', () => {
@@ -125,7 +152,7 @@ describe('getMarketById', () => {
       category: 'Weather',
       description: null,
       conditionId: 'condition-123',
-      outcomes: '["Yes","No"]',
+      outcomes: ['Yes', 'No'],
       endDate: '2026-04-10T12:00:00.000Z',
       volume: '1234.56',
       active: true,
@@ -173,5 +200,167 @@ describe('getMarketById', () => {
       ),
       { times: 1 },
     );
+  });
+  it('should reject malformed market data', async () => {
+    const mockResponse = {
+      ok: true,
+      status: 200,
+      json: async () => [
+        {
+          id: '1',
+          question: 'Will it rain tomorrow?',
+          category: 'Weather',
+          description: null,
+          conditionId: 'condition-123',
+          outcomes: 'not a valid outcomes string',
+          endDate: '2026-04-10T12:00:00.000Z',
+          volume: '1234.56',
+          active: true,
+          closed: false,
+        },
+      ],
+    } as Response;
+    td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
+
+    await expect(gammaApiClient.getMarketById('condition-123')).rejects.toThrow(
+      'Invalid response',
+    );
+    td.verify(logger.error(td.matchers.anything(), 'Invalid response'), {
+      times: 1,
+    });
+  });
+});
+describe('getMarketsByCategory', () => {
+  it('should fetch markets by category', async () => {
+    const mockResponse = {
+      ok: true,
+      status: 200,
+      json: async () => [
+        {
+          id: '1',
+          question: 'Will it rain tomorrow?',
+          category: 'Weather',
+          description: null,
+          conditionId: 'condition-123',
+          outcomes: '["Yes","No"]',
+          endDate: '2026-04-10T12:00:00.000Z',
+          volume: '1234.56',
+          active: true,
+          closed: false,
+        },
+      ],
+    } as Response;
+    td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
+
+    const markets = await gammaApiClient.getMarketsByCategory({
+      category: 'Weather',
+      count: 1,
+      offset: 0,
+      asc: true,
+    });
+
+    td.verify(
+      global.fetch(
+        'https://gamma-api.polymarket.com/markets?category=Weather&limit=1&offset=0&asc=true',
+      ),
+      { times: 1 },
+    );
+    expect(markets).toEqual([
+      {
+        id: '1',
+        question: 'Will it rain tomorrow?',
+        category: 'Weather',
+        description: null,
+        conditionId: 'condition-123',
+        outcomes: ['Yes', 'No'],
+        endDate: '2026-04-10T12:00:00.000Z',
+        volume: '1234.56',
+        active: true,
+        closed: false,
+      },
+    ]);
+    td.verify(
+      logger.error(
+        td.matchers.anything(),
+        'Failed to fetch markets by category',
+      ),
+      { times: 0 },
+    );
+  });
+  it('should return null when Gamma returns no matching markets', async () => {
+    const mockResponse = {
+      ok: true,
+      status: 200,
+      json: async () => [],
+    } as Response;
+    td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
+
+    await expect(
+      gammaApiClient.getMarketsByCategory({
+        category: 'Weather',
+        count: 1,
+        offset: 0,
+        asc: true,
+      }),
+    ).resolves.toEqual([]);
+  });
+  it('should log an error if fetching markets fails', async () => {
+    const mockResponse = {
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+    } as Response;
+    td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
+
+    await expect(
+      gammaApiClient.getMarketsByCategory({
+        category: 'Weather',
+        count: 1,
+        offset: 0,
+        asc: true,
+      }),
+    ).rejects.toThrow('Failed to fetch markets by category');
+    td.verify(
+      logger.error(
+        {
+          response: mockResponse,
+        },
+        'Failed to fetch markets by category',
+      ),
+      { times: 1 },
+    );
+  });
+  it('should reject malformed market data', async () => {
+    const mockResponse = {
+      ok: true,
+      status: 200,
+      json: async () => [
+        {
+          id: '1',
+          question: 'Will it rain tomorrow?',
+          category: 'Weather',
+          description: null,
+          conditionId: 'condition-123',
+          outcomes: 'not a valid outcomes string',
+          endDate: '2026-04-10T12:00:00.000Z',
+          volume: '1234.56',
+          active: true,
+          closed: false,
+        },
+      ],
+    } as Response;
+    td.when(global.fetch(td.matchers.anything())).thenResolve(mockResponse);
+
+    await expect(
+      gammaApiClient.getMarketsByCategory({
+        category: 'Weather',
+        count: 1,
+        offset: 0,
+        asc: true,
+      }),
+    ).rejects.toThrow('Invalid response');
+    td.verify(logger.error(td.matchers.anything(), 'Invalid response'), {
+      times: 1,
+    });
   });
 });

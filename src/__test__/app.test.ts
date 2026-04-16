@@ -22,7 +22,7 @@ let instruction: AppInstruction<string>;
 
 beforeEach(() => {
   td.reset();
-  const services = createServices(storage, gammaApiClient);
+  const services = createServices({ repo: storage, gammaApiClient });
   const withTransaction = createTransactionRunner(storage, gammaApiClient);
   app = initializeApp({
     storage,

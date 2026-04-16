@@ -23,17 +23,35 @@ export type GammaMarketApiClient = {
   }) => Promise<GammaMarket[]>;
 };
 
+const outcomesSchema = z
+  .string()
+  .transform((s, ctx) => {
+    try {
+      return JSON.parse(s);
+    } catch {
+      ctx.addIssue({ code: 'custom', message: 'outcomes is not valid JSON' });
+      return z.NEVER;
+    }
+  })
+  .pipe(
+    z.union([
+      z.tuple([z.literal('Yes'), z.literal('No')]),
+      z.tuple([z.literal('True'), z.literal('False')]),
+    ]),
+  );
+export type Outcomes = z.infer<typeof outcomesSchema>;
+
 const ResolvedMarketApiSchema = z.object({
   id: z.string(),
   question: z.string(),
-  category: Models.Category,
+  category: Models.Category.nullish().transform((category) => category ?? null),
   description: z.string().nullable(),
   closed: z.boolean(),
 });
 
 const MarketApiSchema = ResolvedMarketApiSchema.extend({
   conditionId: z.string(),
-  outcomes: z.string(),
+  outcomes: outcomesSchema,
   endDate: z.string(),
   volume: z.string(),
   active: z.boolean(),

@@ -6,6 +6,11 @@ import type { Repo } from '~/storage/index.js';
 import type { CreateMarketInput } from '~/storage/market.js';
 import type { Models } from '~/storage/models.js';
 
+type MarketServiceDeps = {
+  repo: Repo;
+  gammaApiClient: GammaMarketApiClient;
+};
+
 export type MarketService = {
   importMarket: (conditionId: string) => Promise<Models['Market']>;
 };
@@ -13,14 +18,12 @@ export type MarketService = {
 function mapGammaMarketToCreateMarketInput(
   market: GammaMarket,
 ): CreateMarketInput {
-  const outcomes: [string, string] = JSON.parse(market.outcomes);
-
   return {
     condition_id: market.conditionId,
     question: market.question,
     category: null,
-    outcome_a: outcomes[0],
-    outcome_b: outcomes[1],
+    outcome_a: market.outcomes[0],
+    outcome_b: market.outcomes[1],
     status: market.active && !market.closed ? 'ACTIVE' : 'CLOSED',
     outcome: null,
     closes_at: new Date(market.endDate),
@@ -29,23 +32,26 @@ function mapGammaMarketToCreateMarketInput(
   };
 }
 
-export function createMarketService(
+function importMarket(
   repo: Repo,
   gammaApiClient: GammaMarketApiClient,
-): MarketService {
-  return {
-    importMarket: async (conditionId) => {
-      const market = await gammaApiClient.getMarketById(conditionId);
+): MarketService['importMarket'] {
+  return async function (conditionId) {
+    const market = await gammaApiClient.getMarketById(conditionId);
 
-      if (!market) {
-        throw new Error(
-          `Market with condition ID "${conditionId}" was not found in Gamma`,
-        );
-      }
-
-      return repo.market.upsertMarket(
-        mapGammaMarketToCreateMarketInput(market),
+    if (!market) {
+      throw new Error(
+        `Market with condition ID "${conditionId}" was not found in Gamma`,
       );
-    },
+    }
+
+    return repo.market.upsertMarket(mapGammaMarketToCreateMarketInput(market));
+  };
+}
+
+export function createMarketService(deps: MarketServiceDeps): MarketService {
+  const { repo, gammaApiClient } = deps;
+  return {
+    importMarket: importMarket(repo, gammaApiClient),
   };
 }
