@@ -194,7 +194,7 @@ export const initializeAppWithConfig = async ({
   const storage = await createStorage(DATABASE_URL);
   //GAMMA API client
   const gammaApiClient = createGammaMarketApiClient({ logger });
-  const services = createServices(storage, gammaApiClient);
+  const services = createServices({ repo: storage, gammaApiClient });
   const withTransaction = createTransactionRunner(storage, gammaApiClient);
   return initializeApp({
     storage,

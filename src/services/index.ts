@@ -6,12 +6,14 @@ export type Services = {
   market: MarketService;
 };
 
-export function createServices(
-  repo: Repo,
-  gammaApiClient: GammaMarketApiClient,
-): Services {
+type CreateServicesDeps = {
+  repo: Repo;
+  gammaApiClient: GammaMarketApiClient;
+};
+
+export function createServices(deps: CreateServicesDeps): Services {
   return {
-    market: createMarketService(repo, gammaApiClient),
+    market: createMarketService(deps),
   };
 }
 
@@ -21,6 +23,6 @@ export function createTransactionRunner(
 ) {
   return <T>(callback: (services: Services) => Promise<T>) =>
     storage.transaction((repo) =>
-      callback(createServices(repo, gammaApiClient)),
+      callback(createServices({ repo, gammaApiClient })),
     );
 }

@@ -6,7 +6,7 @@ import type { Repo } from '~/storage/index.js';
 import type { CreateMarketInput } from '~/storage/market.js';
 import type { Models } from '~/storage/models.js';
 
-export type MarketServiceDeps = {
+type MarketServiceDeps = {
   repo: Repo;
   gammaApiClient: GammaMarketApiClient;
 };
@@ -49,10 +49,8 @@ function importMarket(
   };
 }
 
-export function createMarketService(
-  repo: Repo,
-  gammaApiClient: GammaMarketApiClient,
-): MarketService {
+export function createMarketService(deps: MarketServiceDeps): MarketService {
+  const { repo, gammaApiClient } = deps;
   return {
     importMarket: importMarket(repo, gammaApiClient),
   };

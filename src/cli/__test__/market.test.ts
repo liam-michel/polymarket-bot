@@ -56,7 +56,7 @@ let app: App;
 describe('markets command', () => {
   beforeEach(() => {
     td.reset();
-    const services = createServices(storage, gammaApiClient);
+    const services = createServices({ repo: storage, gammaApiClient });
     const withTransaction = createTransactionRunner(storage, gammaApiClient);
     app = initializeApp({
       storage,
@@ -172,7 +172,8 @@ describe('markets command', () => {
       logger.info({ result: testMarket }, 'Market imported successfully'),
     );
   });
-  it('should throw when a malformed market is returned from Gamma', async () => {
+
+  it('should propagate errors thrown by the Gamma API client', async () => {
     td.when(gammaApiClient.getMarketById(td.matchers.isA(String))).thenReject(
       new Error('Invalid response'),
     );
