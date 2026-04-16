@@ -10,6 +10,8 @@
   "scripts": {
     "codegen": "prisma generate",
     "startcli": "bun run ./src/cli/index.ts",
+    "startcli:built": "bun run ./dist/src/cli/index.js",
+    "build": "tsc",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt --write .",
