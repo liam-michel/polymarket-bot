@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { App, initializeApp } from '~/app.js';
 import { signal } from '~/cli/commands/signal.js';
-import { isCommandErrorLogged } from '~/cli/errors.js';
 import { GammaMarketApiClient } from '~/gamma/market/market.js';
 import { createServices, createTransactionRunner } from '~/services/index.js';
 import type { Storage } from '~/storage/index.js';
@@ -132,7 +131,39 @@ describe('signal command', () => {
           wallet: '0xabc',
           conditionId: 'condition-123',
         }),
-        'Failed to create signal',
+        'Error executing instruction',
+      ),
+    );
+  });
+
+  it('rejects an invalid dry-run value with contextual logging', async () => {
+    await expect(
+      createCommandUnderTest().parseAsync(
+        [
+          'create',
+          '0xabc',
+          'condition-123',
+          'BUY',
+          '0',
+          '0.550000',
+          '0.7500',
+          '--dry-run',
+          'maybe',
+        ],
+        {
+          from: 'user',
+        },
+      ),
+    ).rejects.toThrow('Invalid boolean "maybe": expected "true" or "false"');
+
+    td.verify(
+      logger.error(
+        td.matchers.contains({
+          wallet: '0xabc',
+          conditionId: 'condition-123',
+          dryRun: 'maybe',
+        }),
+        'Error executing instruction',
       ),
     );
   });
@@ -199,32 +230,22 @@ describe('signal command', () => {
     td.verify(
       logger.error(
         td.matchers.contains({ signalId: '99' }),
-        'Failed to get signal',
+        'Error executing instruction',
       ),
     );
   });
 
   it('rejects an invalid signal id', async () => {
-    let caughtError: unknown;
-
-    try {
-      await createCommandUnderTest().parseAsync(['get', '0'], {
+    await expect(
+      createCommandUnderTest().parseAsync(['get', '0'], {
         from: 'user',
-      });
-    } catch (error) {
-      caughtError = error;
-    }
-
-    expect(caughtError).toBeInstanceOf(Error);
-    expect(
-      caughtError instanceof Error ? caughtError.message : String(caughtError),
-    ).toBe('Signal ID must be a positive integer');
-    expect(isCommandErrorLogged(caughtError)).toBe(true);
+      }),
+    ).rejects.toThrow('Signal ID must be a positive integer');
 
     td.verify(
       logger.error(
         td.matchers.contains({ signalId: '0' }),
-        'Failed to get signal',
+        'Error executing instruction',
       ),
     );
   });
@@ -294,13 +315,6 @@ describe('signal command', () => {
         from: 'user',
       }),
     ).rejects.toThrow('Signal with ID "1" has already been marked executed');
-
-    td.verify(
-      logger.error(
-        td.matchers.contains({ signalId: '1' }),
-        'Failed to mark signal executed',
-      ),
-    );
   });
 
   it('rejects whitespace-only notes when creating a signal', async () => {
@@ -336,8 +350,8 @@ describe('signal command', () => {
 
     td.verify(
       logger.error(
-        td.matchers.contains({ signalId: '1', notes: undefined }),
-        'Failed to mark signal executed',
+        td.matchers.contains({ signalId: '1', notes: '   ' }),
+        'Error executing instruction',
       ),
     );
   });

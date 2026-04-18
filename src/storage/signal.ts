@@ -29,90 +29,72 @@ export type SignalStorage = {
   markSignalExecuted: (id: string, notes?: string) => Promise<Signal | null>;
 };
 
-function createStorageError(message: string, error: unknown): Error {
-  const cause = error instanceof Error ? error : new Error(String(error));
-
-  return new Error(message, { cause });
-}
-
 function createSignal(db: KyselyDB): SignalStorage['createSignal'] {
   return async function (input) {
-    try {
-      const result = await db
-        .insertInto('signals')
-        .values({
-          wallet: input.wallet,
-          condition_id: input.condition_id,
-          signal_type: input.signal_type,
-          side: input.side,
-          outcome_index: input.outcome_index,
-          price: input.price,
-          confidence: input.confidence,
-          dry_run: input.dry_run ?? true,
-          executed: false,
-          executed_at: null,
-          notes: input.notes ?? null,
-        })
-        .returningAll()
-        .executeTakeFirstOrThrow();
+    const result = await db
+      .insertInto('signals')
+      .values({
+        wallet: input.wallet,
+        condition_id: input.condition_id,
+        signal_type: input.signal_type,
+        side: input.side,
+        outcome_index: input.outcome_index,
+        price: input.price,
+        confidence: input.confidence,
+        dry_run: input.dry_run ?? true,
+        executed: false,
+        executed_at: null,
+        notes: input.notes ?? null,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
 
-      return Models.Signal.parse(result);
-    } catch (error) {
-      throw createStorageError('Failed to create signal', error);
-    }
+    return Models.Signal.parse(result);
   };
 }
 
 function listSignals(db: KyselyDB): SignalStorage['listSignals'] {
   return async function (input = {}) {
-    try {
-      let query = db.selectFrom('signals').selectAll();
+    let query = db.selectFrom('signals').selectAll();
 
-      if (input.wallet) {
-        query = query.where('wallet', '=', input.wallet);
-      }
-
-      if (input.condition_id) {
-        query = query.where('condition_id', '=', input.condition_id);
-      }
-
-      if (input.signal_type) {
-        query = query.where('signal_type', '=', input.signal_type);
-      }
-
-      if (input.executed !== undefined) {
-        query = query.where('executed', '=', input.executed);
-      }
-
-      const results = await query
-        .orderBy('created_at', 'desc')
-        .orderBy('id', 'desc')
-        .execute();
-
-      return Models.Signal.array().parse(results);
-    } catch (error) {
-      throw createStorageError('Failed to list signals', error);
+    if (input.wallet) {
+      query = query.where('wallet', '=', input.wallet);
     }
+
+    if (input.condition_id) {
+      query = query.where('condition_id', '=', input.condition_id);
+    }
+
+    if (input.signal_type) {
+      query = query.where('signal_type', '=', input.signal_type);
+    }
+
+    if (input.executed !== undefined) {
+      query = query.where('executed', '=', input.executed);
+    }
+
+    const results = await query
+      .orderBy('created_at', 'desc')
+      .orderBy('id', 'desc')
+      .execute();
+
+    return Models.Signal.array().parse(results);
   };
 }
 
 function getSignalById(db: KyselyDB): SignalStorage['getSignalById'] {
   return async function (id) {
-    try {
-      const result = await db
-        .selectFrom('signals')
-        .where('id', '=', id)
-        .selectAll()
-        .executeTakeFirst();
+    const result = await db
+      .selectFrom('signals')
+      .where('id', '=', id)
+      .selectAll()
+      .executeTakeFirst();
 
-      if (!result) {
-        return null;
-      }
-
-      return Models.Signal.parse(result);
-    } catch (error) {
-      throw createStorageError(`Failed to get signal with ID "${id}"`, error);
+    if (!result) {
+      return null;
     }
+
+    return Models.Signal.parse(result);
   };
 }
 
@@ -123,52 +105,35 @@ class SignalAlreadyExecutedError extends Error {
   }
 }
 
-function createSignalAlreadyExecutedError(
-  id: string,
-): SignalAlreadyExecutedError {
-  return new SignalAlreadyExecutedError(id);
-}
-
 function markSignalExecuted(db: KyselyDB): SignalStorage['markSignalExecuted'] {
   return async function (id, notes) {
-    try {
-      const result = await db
-        .updateTable('signals')
-        .set({
-          executed: true,
-          executed_at: new Date(),
-          ...(notes === undefined ? {} : { notes }),
-        })
-        .where('id', '=', id)
-        .where('executed', '=', false)
-        .returningAll()
-        .executeTakeFirst();
+    const result = await db
+      .updateTable('signals')
+      .set({
+        executed: true,
+        executed_at: new Date(),
+        ...(notes === undefined ? {} : { notes }),
+      })
+      .where('id', '=', id)
+      .where('executed', '=', false)
+      .returningAll()
+      .executeTakeFirst();
 
-      if (result) {
-        return Models.Signal.parse(result);
-      }
-
-      const existingSignal = await db
-        .selectFrom('signals')
-        .where('id', '=', id)
-        .selectAll()
-        .executeTakeFirst();
-
-      if (!existingSignal) {
-        return null;
-      }
-
-      throw createSignalAlreadyExecutedError(id);
-    } catch (error) {
-      if (error instanceof SignalAlreadyExecutedError) {
-        throw error;
-      }
-
-      throw createStorageError(
-        `Failed to mark signal with ID "${id}" executed`,
-        error,
-      );
+    if (result) {
+      return Models.Signal.parse(result);
     }
+
+    const existingSignal = await db
+      .selectFrom('signals')
+      .where('id', '=', id)
+      .selectAll()
+      .executeTakeFirst();
+
+    if (!existingSignal) {
+      return null;
+    }
+
+    throw new SignalAlreadyExecutedError(id);
   };
 }
 

@@ -4,7 +4,6 @@ import { type App, initializeAppFromEnvironment } from '../app.js';
 import { markets } from './commands/market.js';
 import { signal } from './commands/signal.js';
 import { wallet } from './commands/wallet.js';
-import { isCommandErrorLogged } from './errors.js';
 
 function getBeforeExitHandler({ logger }: App) {
   return async () => {
@@ -56,18 +55,12 @@ async function main() {
   p.addCommand(markets(app));
   p.addCommand(signal(app));
   p.addCommand(wallet(app));
-  await p
-    .parseAsync(process.argv)
-    .then(() => {
-      process.exit(0);
-    })
-    .catch((err) => {
-      if (!isCommandErrorLogged(err)) {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        app.logger.error(`Error executing command: ${errorMessage}`);
-      }
 
-      process.exit(1);
-    });
+  try {
+    await p.parseAsync(process.argv);
+    process.exit(0);
+  } catch {
+    process.exit(1);
+  }
 }
 await main();
