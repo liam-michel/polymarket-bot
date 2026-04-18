@@ -2,7 +2,9 @@ import { createCommand } from 'commander';
 
 import { type App, initializeAppFromEnvironment } from '../app.js';
 import { markets } from './commands/market.js';
+import { signal } from './commands/signal.js';
 import { wallet } from './commands/wallet.js';
+
 function getBeforeExitHandler({ logger }: App) {
   return async () => {
     logger.warn(
@@ -51,16 +53,14 @@ async function main() {
 
   //register commands
   p.addCommand(markets(app));
+  p.addCommand(signal(app));
   p.addCommand(wallet(app));
-  await p
-    .parseAsync(process.argv)
-    .then(() => {
-      process.exit(0);
-    })
-    .catch((err) => {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      app.logger.error(`Error executing command: ${errorMessage}`);
-      process.exit(1);
-    });
+
+  try {
+    await p.parseAsync(process.argv);
+    process.exit(0);
+  } catch {
+    process.exit(1);
+  }
 }
 await main();

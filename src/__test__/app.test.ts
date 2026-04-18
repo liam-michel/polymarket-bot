@@ -49,6 +49,39 @@ describe('execute:once', () => {
     expect(result).toBe('test');
     expect(executionCount).toBe(1);
   });
+
+  it('should log errors when the instruction throws', async () => {
+    td.when(instruction(td.matchers.anything(), td.matchers.anything())).thenDo(
+      () => instructionFactory(() => Promise.reject(new Error('test error'))),
+    );
+
+    await expect(app.execute(instruction).once()).rejects.toThrow('test error');
+
+    td.verify(
+      logger.error(td.matchers.anything(), 'Error executing instruction'),
+    );
+  });
+
+  it('should include contextual error fields in logs when present', async () => {
+    const contextualError = Object.assign(new Error('test error'), {
+      context: {
+        signalId: '1',
+      },
+    });
+
+    td.when(instruction(td.matchers.anything(), td.matchers.anything())).thenDo(
+      () => instructionFactory(() => Promise.reject(contextualError)),
+    );
+
+    await expect(app.execute(instruction).once()).rejects.toThrow('test error');
+
+    td.verify(
+      logger.error(
+        td.matchers.contains({ signalId: '1' }),
+        'Error executing instruction',
+      ),
+    );
+  });
 });
 
 describe('execute:times', () => {
@@ -64,6 +97,23 @@ describe('execute:times', () => {
     const result = await app.execute(instruction).times(3);
 
     expect(result).toEqual(['test1', 'test2', 'test3']);
+  });
+
+  it('should log errors when an execution fails', async () => {
+    td.when(
+      instruction(td.matchers.anything(), td.matchers.anything()),
+    ).thenReturn(
+      instructionFactory(() => Promise.resolve('test1')),
+      instructionFactory(() => Promise.reject(new Error('test error'))),
+    );
+
+    await expect(app.execute(instruction).times(2)).rejects.toThrow(
+      'test error',
+    );
+
+    td.verify(
+      logger.error(td.matchers.anything(), 'Error executing instruction'),
+    );
   });
 });
 
