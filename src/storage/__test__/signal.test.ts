@@ -206,6 +206,43 @@ describe('createSignalStorage', () => {
     expect(result).toBeNull();
   });
 
+  it('bubbles database failures when listing signals', async () => {
+    const builder = {
+      selectAll: () => builder,
+      where: () => builder,
+      orderBy: () => builder,
+      execute: async () => {
+        throw new Error('db offline');
+      },
+    };
+
+    const db = {
+      selectFrom: () => builder,
+    };
+
+    await expect(
+      createSignalStorage(db as never).listSignals(),
+    ).rejects.toThrow('db offline');
+  });
+
+  it('bubbles database failures when getting a signal by id', async () => {
+    const builder = {
+      where: () => builder,
+      selectAll: () => builder,
+      executeTakeFirst: async () => {
+        throw new Error('db offline');
+      },
+    };
+
+    const db = {
+      selectFrom: () => builder,
+    };
+
+    await expect(
+      createSignalStorage(db as never).getSignalById('1'),
+    ).rejects.toThrow('db offline');
+  });
+
   it('marks a signal executed and updates notes when provided', async () => {
     const recorded: {
       set?: {
@@ -435,7 +472,29 @@ describe('createSignalStorage', () => {
     expect(result).toBeNull();
   });
 
-  it('wraps storage failures with contextual create errors', async () => {
+  it('bubbles database failures when marking a signal executed', async () => {
+    const updateBuilder = {
+      set: () => updateBuilder,
+      where: () => updateBuilder,
+      returningAll: () => updateBuilder,
+      executeTakeFirst: async () => {
+        throw new Error('db offline');
+      },
+    };
+
+    const db = {
+      selectFrom: () => {
+        throw new Error('select should not be called');
+      },
+      updateTable: () => updateBuilder,
+    };
+
+    await expect(
+      createSignalStorage(db as never).markSignalExecuted('1'),
+    ).rejects.toThrow('db offline');
+  });
+
+  it('bubbles database failures when creating a signal', async () => {
     const insertBuilder = {
       values: () => insertBuilder,
       returningAll: () => insertBuilder,
@@ -458,6 +517,6 @@ describe('createSignalStorage', () => {
         price: '0.55',
         confidence: '0.75',
       }),
-    ).rejects.toThrow('Failed to create signal');
+    ).rejects.toThrow('db offline');
   });
 });

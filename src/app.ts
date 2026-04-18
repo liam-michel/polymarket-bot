@@ -20,6 +20,8 @@ import { createLogger } from './utils/logger.js';
 type ErrorHandler = (error: Error) => Promise<void>;
 type SuccessHandler<T> = (result: T) => Promise<void>;
 
+type ErrorContext = Record<string, unknown>;
+
 type InstructionBuilder<T> = {
   onError: (handler: ErrorHandler) => InstructionBuilder<T>;
   onSuccess: (handler: SuccessHandler<T>) => InstructionBuilder<T>;
@@ -92,6 +94,34 @@ export function initializeApp(appDependencies: AppDependencies): App {
     errorHandlers: {},
   };
 
+  const extractErrorContext = (error: unknown): ErrorContext => {
+    if (typeof error !== 'object' || error === null || !('context' in error)) {
+      return {};
+    }
+
+    const context = (error as { context?: unknown }).context;
+
+    if (
+      typeof context !== 'object' ||
+      context === null ||
+      Array.isArray(context)
+    ) {
+      return {};
+    }
+
+    return context as ErrorContext;
+  };
+
+  const logInstructionError = (error: unknown) => {
+    appDependencies.logger.error(
+      {
+        ...extractErrorContext(error),
+        error,
+      },
+      'Error executing instruction',
+    );
+  };
+
   const execute = <TOutput>(instruction: AppInstruction<TOutput>) => {
     const runInstruction = async (operationId: string): Promise<TOutput> => {
       const builder = instruction(appDependencies, operationId);
@@ -115,6 +145,8 @@ export function initializeApp(appDependencies: AppDependencies): App {
 
         if (errorHandler) {
           await errorHandler(error as Error);
+        } else {
+          logInstructionError(error);
         }
 
         throw error;
@@ -139,11 +171,8 @@ export function initializeApp(appDependencies: AppDependencies): App {
         const run = async () => {
           try {
             await runInstruction(randomUUID());
-          } catch (error) {
-            appDependencies.logger.error(
-              { error },
-              'Error executing instruction',
-            );
+          } catch {
+            // runInstruction already logs failures; swallow to keep scheduling.
           }
         };
 
