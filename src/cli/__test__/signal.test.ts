@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { App, initializeApp } from '~/app.js';
 import { signal } from '~/cli/commands/signal.js';
+import { isCommandErrorLogged } from '~/cli/errors.js';
 import { GammaMarketApiClient } from '~/gamma/market/market.js';
 import { createServices, createTransactionRunner } from '~/services/index.js';
 import type { Storage } from '~/storage/index.js';
@@ -204,11 +205,21 @@ describe('signal command', () => {
   });
 
   it('rejects an invalid signal id', async () => {
-    await expect(
-      createCommandUnderTest().parseAsync(['get', '0'], {
+    let caughtError: unknown;
+
+    try {
+      await createCommandUnderTest().parseAsync(['get', '0'], {
         from: 'user',
-      }),
-    ).rejects.toThrow('Signal ID must be a positive integer');
+      });
+    } catch (error) {
+      caughtError = error;
+    }
+
+    expect(caughtError).toBeInstanceOf(Error);
+    expect(
+      caughtError instanceof Error ? caughtError.message : String(caughtError),
+    ).toBe('Signal ID must be a positive integer');
+    expect(isCommandErrorLogged(caughtError)).toBe(true);
 
     td.verify(
       logger.error(
