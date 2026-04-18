@@ -116,27 +116,22 @@ function getSignalById(db: KyselyDB): SignalStorage['getSignalById'] {
   };
 }
 
-function createSignalAlreadyExecutedError(id: string): Error {
-  return new Error(`Signal with ID "${id}" has already been marked executed`);
+class SignalAlreadyExecutedError extends Error {
+  constructor(id: string) {
+    super(`Signal with ID "${id}" has already been marked executed`);
+    this.name = 'SignalAlreadyExecutedError';
+  }
+}
+
+function createSignalAlreadyExecutedError(
+  id: string,
+): SignalAlreadyExecutedError {
+  return new SignalAlreadyExecutedError(id);
 }
 
 function markSignalExecuted(db: KyselyDB): SignalStorage['markSignalExecuted'] {
   return async function (id, notes) {
     try {
-      const existingSignal = await db
-        .selectFrom('signals')
-        .where('id', '=', id)
-        .selectAll()
-        .executeTakeFirst();
-
-      if (!existingSignal) {
-        return null;
-      }
-
-      if (existingSignal.executed) {
-        throw createSignalAlreadyExecutedError(id);
-      }
-
       const result = await db
         .updateTable('signals')
         .set({
@@ -149,16 +144,23 @@ function markSignalExecuted(db: KyselyDB): SignalStorage['markSignalExecuted'] {
         .returningAll()
         .executeTakeFirst();
 
-      if (!result) {
-        throw createSignalAlreadyExecutedError(id);
+      if (result) {
+        return Models.Signal.parse(result);
       }
 
-      return Models.Signal.parse(result);
+      const existingSignal = await db
+        .selectFrom('signals')
+        .where('id', '=', id)
+        .selectAll()
+        .executeTakeFirst();
+
+      if (!existingSignal) {
+        return null;
+      }
+
+      throw createSignalAlreadyExecutedError(id);
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message === createSignalAlreadyExecutedError(id).message
-      ) {
+      if (error instanceof SignalAlreadyExecutedError) {
         throw error;
       }
 

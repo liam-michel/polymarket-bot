@@ -208,17 +208,14 @@ describe('createSignalStorage', () => {
 
   it('marks a signal executed and updates notes when provided', async () => {
     const recorded: {
-      selectTable?: string;
       set?: {
         executed: boolean;
         executed_at: Date;
         notes?: string;
       };
       table?: string;
-      selectWhere: Array<[string, string, string]>;
       where: Array<[string, string, boolean | string]>;
     } = {
-      selectWhere: [],
       where: [],
     };
 
@@ -227,15 +224,6 @@ describe('createSignalStorage', () => {
       executed: true,
       executed_at: new Date('2026-04-10T12:05:00.000Z'),
       notes: 'Executed manually',
-    };
-
-    const selectBuilder = {
-      where: (column: string, operator: string, value: string) => {
-        recorded.selectWhere.push([column, operator, value]);
-        return selectBuilder;
-      },
-      selectAll: () => selectBuilder,
-      executeTakeFirst: async () => signalRow,
     };
 
     const updateBuilder = {
@@ -256,9 +244,8 @@ describe('createSignalStorage', () => {
     };
 
     const db = {
-      selectFrom: (table: string) => {
-        recorded.selectTable = table;
-        return selectBuilder;
+      selectFrom: () => {
+        throw new Error('select should not be called');
       },
       updateTable: (table: string) => {
         recorded.table = table;
@@ -271,8 +258,6 @@ describe('createSignalStorage', () => {
       'Executed manually',
     );
 
-    expect(recorded.selectTable).toBe('signals');
-    expect(recorded.selectWhere).toEqual([['id', '=', '1']]);
     expect(recorded.table).toBe('signals');
     expect(recorded.set).toMatchObject({
       executed: true,
@@ -292,8 +277,6 @@ describe('createSignalStorage', () => {
 
   it('marks a signal executed without overwriting notes when omitted', async () => {
     const recorded: {
-      selectTable?: string;
-      selectWhere: Array<[string, string, string]>;
       set?: {
         executed: boolean;
         executed_at: Date;
@@ -301,17 +284,7 @@ describe('createSignalStorage', () => {
       table?: string;
       where: Array<[string, string, boolean | string]>;
     } = {
-      selectWhere: [],
       where: [],
-    };
-
-    const selectBuilder = {
-      where: (column: string, operator: string, value: string) => {
-        recorded.selectWhere.push([column, operator, value]);
-        return selectBuilder;
-      },
-      selectAll: () => selectBuilder,
-      executeTakeFirst: async () => signalRow,
     };
 
     const updateBuilder = {
@@ -332,9 +305,8 @@ describe('createSignalStorage', () => {
     };
 
     const db = {
-      selectFrom: (table: string) => {
-        recorded.selectTable = table;
-        return selectBuilder;
+      selectFrom: () => {
+        throw new Error('select should not be called');
       },
       updateTable: (table: string) => {
         recorded.table = table;
@@ -344,8 +316,6 @@ describe('createSignalStorage', () => {
 
     await createSignalStorage(db as never).markSignalExecuted('1');
 
-    expect(recorded.selectTable).toBe('signals');
-    expect(recorded.selectWhere).toEqual([['id', '=', '1']]);
     expect(recorded.table).toBe('signals');
     expect(recorded.set).toEqual({
       executed: true,
@@ -361,6 +331,8 @@ describe('createSignalStorage', () => {
     const recorded = {
       selectTable: '',
       selectWhere: [] as Array<[string, string, string]>,
+      table: '',
+      where: [] as Array<[string, string, boolean | string]>,
     };
 
     const selectBuilder = {
@@ -377,13 +349,24 @@ describe('createSignalStorage', () => {
       }),
     };
 
+    const updateBuilder = {
+      set: () => updateBuilder,
+      where: (column: string, operator: string, value: boolean | string) => {
+        recorded.where.push([column, operator, value]);
+        return updateBuilder;
+      },
+      returningAll: () => updateBuilder,
+      executeTakeFirst: async () => undefined,
+    };
+
     const db = {
       selectFrom: (table: string) => {
         recorded.selectTable = table;
         return selectBuilder;
       },
-      updateTable: () => {
-        throw new Error('update should not be called');
+      updateTable: (table: string) => {
+        recorded.table = table;
+        return updateBuilder;
       },
     };
 
@@ -391,6 +374,11 @@ describe('createSignalStorage', () => {
       createSignalStorage(db as never).markSignalExecuted('1'),
     ).rejects.toThrow('Signal with ID "1" has already been marked executed');
 
+    expect(recorded.table).toBe('signals');
+    expect(recorded.where).toEqual([
+      ['id', '=', '1'],
+      ['executed', '=', false],
+    ]);
     expect(recorded.selectTable).toBe('signals');
     expect(recorded.selectWhere).toEqual([['id', '=', '1']]);
   });
@@ -399,6 +387,8 @@ describe('createSignalStorage', () => {
     const recorded = {
       selectTable: '',
       selectWhere: [] as Array<[string, string, string]>,
+      table: '',
+      where: [] as Array<[string, string, boolean | string]>,
     };
 
     const selectBuilder = {
@@ -410,13 +400,24 @@ describe('createSignalStorage', () => {
       executeTakeFirst: async () => undefined,
     };
 
+    const updateBuilder = {
+      set: () => updateBuilder,
+      where: (column: string, operator: string, value: boolean | string) => {
+        recorded.where.push([column, operator, value]);
+        return updateBuilder;
+      },
+      returningAll: () => updateBuilder,
+      executeTakeFirst: async () => undefined,
+    };
+
     const db = {
       selectFrom: (table: string) => {
         recorded.selectTable = table;
         return selectBuilder;
       },
-      updateTable: () => {
-        throw new Error('update should not be called');
+      updateTable: (table: string) => {
+        recorded.table = table;
+        return updateBuilder;
       },
     };
 
@@ -424,6 +425,11 @@ describe('createSignalStorage', () => {
       '999',
     );
 
+    expect(recorded.table).toBe('signals');
+    expect(recorded.where).toEqual([
+      ['id', '=', '999'],
+      ['executed', '=', false],
+    ]);
     expect(recorded.selectTable).toBe('signals');
     expect(recorded.selectWhere).toEqual([['id', '=', '999']]);
     expect(result).toBeNull();

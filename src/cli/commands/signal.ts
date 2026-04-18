@@ -3,6 +3,7 @@ import { Decimal } from 'decimal.js';
 import { z } from 'zod';
 
 import { App, instruction } from '~/app.js';
+import { markCommandErrorLogged, normalizeError } from '~/cli/errors.js';
 import { Models } from '~/storage/models.js';
 import type { CreateSignalInput, ListSignalsInput } from '~/storage/signal.js';
 
@@ -196,21 +197,13 @@ function parseOptionalNotes(value?: string): string | undefined {
   return notes;
 }
 
-function normalizeError(error: unknown): Error {
-  if (error instanceof Error) {
-    return error;
-  }
-
-  return new Error(String(error));
-}
-
 function logAndRethrowCommandError(
   app: App,
   message: string,
   error: unknown,
   context: Record<string, unknown>,
 ): never {
-  const normalizedError = normalizeError(error);
+  const normalizedError = markCommandErrorLogged(normalizeError(error));
 
   app.logger.error(
     {
